@@ -23,6 +23,10 @@
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
-
+        <localInspection shortName="AIDummyNameFinder"
+                         hasStaticDescription="true"
+                         enabledByDefault="true"
+                         level="WARNING"
+                         implementationClass="com.nbogdanov.smartaiplugin.DummyNamesAIInspection"/>
     </extensions>
 </idea-plugin>

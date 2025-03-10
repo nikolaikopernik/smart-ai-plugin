@@ -1,6 +1,3 @@
-import org.gradle.kotlin.dsl.support.kotlinCompilerOptions
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "2.1.0"
@@ -9,7 +6,7 @@ plugins {
 }
 
 group = "com.nbogdanov"
-version = "1.0-SNAPSHOT"
+version = "0.0.1"
 
 repositories {
     mavenCentral()
@@ -25,20 +22,19 @@ dependencies {
     intellijPlatform {
         create("IC", "2024.2.5")
         testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)
-
+        implementation("com.openai:openai-java:0.33.0")
+        runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")
         // Add necessary plugin dependencies for compilation here, example:
         // bundledPlugin("com.intellij.java")
     }
-    implementation("io.ktor:ktor-client-jetty-jakarta:${ktor_version}")
-    implementation("com.xemantic.ai:xemantic-ai-tool-schema:1.0.0")
-    implementation("com.openai:openai-java:0.33.0")
-    runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")
+
 }
 
 intellijPlatform {
     pluginConfiguration {
         ideaVersion {
-            sinceBuild = "242"
+            sinceBuild = "241"
+            untilBuild = "251.*"
         }
 
         changeNotes = """

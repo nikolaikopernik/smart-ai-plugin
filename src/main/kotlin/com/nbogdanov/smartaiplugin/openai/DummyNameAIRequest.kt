@@ -1,9 +1,11 @@
-package com.nbogdanov.smartaiplugin.openai.model
+package com.nbogdanov.smartaiplugin.openai
 
+import com.intellij.lang.Language
+import com.nbogdanov.smartaiplugin.openai.model.AIRequest
 import com.openai.models.ChatModel
 import java.nio.file.Path
 
-class DummyNameAIRequest(val file: Path) : AIRequest {
+class DummyNameAIRequest(val lang: Language, val file: Path) : AIRequest {
     override fun systemMessage() =
         "You are a java developer with 10 ears of experience."
 
@@ -16,6 +18,7 @@ class DummyNameAIRequest(val file: Path) : AIRequest {
 
     override fun attachments() = listOf(file)
 
-    override fun modelPreference() = ChatModel.GPT_4O_MINI
-}
+    override fun modelPreference() = ChatModel.Companion.GPT_4O_MINI
 
+
+}

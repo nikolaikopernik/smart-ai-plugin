@@ -7,26 +7,24 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.nbogdanov.smartaiplugin.openai.model.AIRequest
 import com.nbogdanov.smartaiplugin.openai.model.AIResponse
-import com.nbogdanov.smartaiplugin.openai.model.DummyNameAIRequest
 import com.openai.client.okhttp.OpenAIOkHttpClient
 import com.openai.models.ChatCompletion
 import com.openai.models.ChatCompletionContentPart
 import com.openai.models.ChatCompletionContentPartText
 import com.openai.models.ChatCompletionCreateParams
 import kotlinx.coroutines.future.await
-import kotlinx.coroutines.runBlocking
-import java.nio.file.Path
 
-
+/**
+ * Here we apply our domain AI requests and parse to domain AI responses
+ */
 class OpenAI {
     val mapper: ObjectMapper = jacksonObjectMapper().registerKotlinModule()
+    val client = OpenAIOkHttpClient.fromEnv()
 
     /**
      * Calling OpenAI to get the results
      */
     suspend fun ask(query: AIRequest): AIResponse {
-        val client = OpenAIOkHttpClient.fromEnv()
-
         val params = ChatCompletionCreateParams.builder()
             .addSystemMessage(query.systemMessage())
             .addUserMessage(userMessageFormatted(query.userMessage()))
@@ -44,7 +42,6 @@ class OpenAI {
             .chat().completions()
             .create(params)
             .await()
-        client.close()
         return parseResponse(chatCompletion)
     }
 
@@ -74,13 +71,7 @@ class OpenAI {
             Do not add any other text apart of this json.  
         """.trimIndent()
 
-}
-
-fun main() {
-    runBlocking {
-        val q = DummyNameAIRequest(Path.of("/opt/workspace/smart-ai-plugin/src/test/resources/test.java"))
-        val result = OpenAI().ask(q)
-        println(result)
+    fun close() {
+        client.close()
     }
-    println("Done")
 }
