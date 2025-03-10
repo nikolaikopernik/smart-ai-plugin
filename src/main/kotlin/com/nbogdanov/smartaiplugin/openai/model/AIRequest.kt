@@ -5,6 +5,7 @@ import java.nio.file.Path
 
 /**
  * General request to AI
+ * Different inspections can implement it.
  */
 interface AIRequest {
     fun systemMessage(): String
