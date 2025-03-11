@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import com.intellij.openapi.diagnostic.Logger
 import com.nbogdanov.smartaiplugin.openai.model.AIRequest
 import com.nbogdanov.smartaiplugin.openai.model.AIResponse
 import com.openai.client.okhttp.OpenAIOkHttpClient
@@ -14,10 +15,13 @@ import com.openai.models.ChatCompletionContentPartText
 import com.openai.models.ChatCompletionCreateParams
 import kotlinx.coroutines.future.await
 
+private val log = Logger.getInstance(OpenAI::class.java)
+
 /**
  * Here we apply our domain AI requests and parse to domain AI responses
  */
 class OpenAI {
+
     val mapper: ObjectMapper = jacksonObjectMapper().registerKotlinModule()
     val client = OpenAIOkHttpClient.fromEnv()
 
@@ -27,7 +31,7 @@ class OpenAI {
     suspend fun ask(query: AIRequest): AIResponse {
         val params = ChatCompletionCreateParams.builder()
             .addSystemMessage(query.systemMessage())
-            .addUserMessage(userMessageFormatted(query.userMessage()))
+            .addUserMessage(query.userMessage())
             .addUserMessageOfArrayOfContentParts(query.attachments()
                 .map {
                     ChatCompletionContentPart.ofText(
@@ -56,6 +60,7 @@ class OpenAI {
             }")
         }
         val text = choice.message().content().orElse("")
+            .also { log.info("OpenAI response:\n $it") }
             .lines()
             .filter { !it.startsWith("```") }
             .joinToString(separator = " ")
@@ -63,13 +68,6 @@ class OpenAI {
         return AIResponse(problems = mapper.readValue(text),
             chatId = completion.id())
     }
-
-    fun userMessageFormatted(message: String) =
-        message + "\n" + """
-            For every spotted problem, use the following format:
-              [{problematicCode:..., explanation:...,solutionCode:...},{...}]
-            Do not add any other text apart of this json.  
-        """.trimIndent()
 
     fun close() {
         client.close()
