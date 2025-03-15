@@ -27,6 +27,6 @@
                          hasStaticDescription="true"
                          enabledByDefault="true"
                          level="WARNING"
-                         implementationClass="com.nbogdanov.smartaiplugin.inspections.dummynames.DummyNamesAIInspection"/>
+                         implementationClass="com.nbogdanov.smartaiplugin.inspections.dummynames.DummyNamesInspection"/>
     </extensions>
 </idea-plugin>

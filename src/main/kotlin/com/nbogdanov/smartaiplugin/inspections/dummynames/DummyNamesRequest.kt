@@ -5,17 +5,16 @@ import com.nbogdanov.smartaiplugin.openai.model.AIRequest
 import com.openai.models.ChatModel
 import java.nio.file.Path
 
-class DummyNameAIRequest(val lang: Language, val file: Path) : AIRequest {
+class DummyNamesRequest(val lang: Language, val file: Path) : AIRequest {
     override fun systemMessage() =
         "You are a java developer with 10 years of experience."
 
     override fun userMessage() =
         """
-            Analyze the provided source code in ${lang.id} and spot all the dummy names 
-            in variables fields and methods. Example of dummy names: a,b,d,x,y,a1,v3,foo,bar etc. 
-            Do not suggest further code improvements apart from naming.
+            Analyze the provided code in ${lang.id} and spot all the dummy names in variables fields and methods. 
+            Do not suggest further code improvements apart from naming. Do not suggest improvements for names which are at least 4 characters long.
             For every spotted problem, use the following format:
-              [{problematicCode:..., explanation:...,solutionCode:...},{...}]
+              [{"problematicCode": <piece_of_problematic_code>, "explanation": <explanation_in_max_2_sentences>, "solutionCode": <proposed_solution> },{...}]
             Do not add any other text apart of this json.
         """.intern()
 

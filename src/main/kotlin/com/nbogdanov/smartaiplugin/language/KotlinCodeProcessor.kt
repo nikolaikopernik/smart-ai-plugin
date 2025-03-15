@@ -2,18 +2,45 @@ package com.nbogdanov.smartaiplugin.language
 
 import com.intellij.lang.Language
 import com.intellij.psi.PsiElement
-import com.intellij.psi.util.elementType
+import com.intellij.psi.PsiNamedElement
 import org.jetbrains.kotlin.idea.KotlinLanguage
-import org.jetbrains.kotlin.lexer.KtTokens
+import org.jetbrains.kotlin.psi.KtClass
+import org.jetbrains.kotlin.psi.KtNamedFunction
+import org.jetbrains.kotlin.psi.KtParameter
+import org.jetbrains.kotlin.psi.KtProperty
 
-class KotlinCodeProcessor : LanguageSupport {
+/**
+ * Some language support once needed.
+ * For DummyNames we need to locate the problematic code in the file and find exact PSI element.
+ */
+open class KotlinCodeProcessor : LanguageSupport {
+
     override fun supportedLanguage(): Language = KotlinLanguage.INSTANCE
 
-    override fun findNextNamedIdentifier(element: PsiElement): PsiElement? {
+    /**
+     * As OpenAI can both: return the dummy name only but also a piece of code it contains, we check some
+     * aroundings of the given element.
+     * Mostly we check all the following siblings (but also switching to parent and doing the same there)
+     */
+    override fun findNextNamedIdentifier(element: PsiElement): PsiNamedElement? {
         var current = element
-        while (current.elementType != KtTokens.IDENTIFIER && current.nextSibling != null) {
+        while (!isNamed(current) && current.nextSibling != null) {
             current = current.nextSibling
         }
-        return if (current.elementType == KtTokens.IDENTIFIER) current else null
+        if (!isNamed(current)) {
+            //try parents
+            current = current.parent
+            while (!isNamed(current) && current.nextSibling != null) {
+                current = current.nextSibling
+            }
+        }
+        return if (isNamed(current)) current as PsiNamedElement else null
     }
+
+    protected open fun isNamed(element: PsiElement): Boolean =
+        when (element) {
+            is KtClass, is KtProperty, is KtNamedFunction, is KtParameter -> true
+
+            else -> false
+        }
 }

@@ -9,11 +9,10 @@ import com.intellij.openapi.diagnostic.Logger
 import com.nbogdanov.smartaiplugin.openai.model.AIRequest
 import com.nbogdanov.smartaiplugin.openai.model.AIResponse
 import com.openai.client.okhttp.OpenAIOkHttpClient
-import com.openai.models.ChatCompletion
-import com.openai.models.ChatCompletionContentPart
-import com.openai.models.ChatCompletionContentPartText
-import com.openai.models.ChatCompletionCreateParams
+import com.openai.models.*
 import kotlinx.coroutines.future.await
+import java.util.Optional
+import java.util.UUID
 
 private val log = Logger.getInstance(OpenAI::class.java)
 
@@ -42,10 +41,12 @@ class OpenAI {
                 })
             .model(query.modelPreference())
             .build()
-        val chatCompletion = client.async()
-            .chat().completions()
-            .create(params)
-            .await()
+        val chatCompletion = dummy()
+//        val chatCompletion = client.async()
+//            .chat().completions()
+//            .create(params)
+//            .await()
+//            .also { log.warn("AI RESPONSE:\n" + it.choices().first().message().content().orElse("EMPTY")) }
         return parseResponse(chatCompletion)
     }
 
@@ -67,6 +68,23 @@ class OpenAI {
             .trim()
         return AIResponse(problems = mapper.readValue(text),
             chatId = completion.id())
+    }
+
+    fun dummy(): ChatCompletion {
+        return ChatCompletion.builder()
+            .id(UUID.randomUUID().toString())
+            .created(1L)
+            .model("sdfsdf")
+            .choices(listOf(ChatCompletion.Choice.builder()
+                .message(ChatCompletionMessage.builder()
+                    .content(this.javaClass.getResource("/dummy.txt").readText())
+                    .refusal(Optional.empty<String>())
+                    .build())
+                .index(1L)
+                .logprobs(Optional.empty())
+                .finishReason(ChatCompletion.Choice.FinishReason.STOP)
+                .build()))
+            .build()
     }
 
     fun close() {

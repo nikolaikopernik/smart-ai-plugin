@@ -3,6 +3,7 @@ package com.nbogdanov.smartaiplugin.language
 import com.intellij.lang.Language
 import com.intellij.openapi.extensions.ExtensionPointName
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiNamedElement
 
 /**
  * In order to optionally support several languages we need to have several implementation and
@@ -16,7 +17,7 @@ interface LanguageSupport {
     /**
      * For locating the dummy named elements we need this method
      */
-    fun findNextNamedIdentifier(element: PsiElement): PsiElement?
+    fun findNextNamedIdentifier(element: PsiElement): PsiNamedElement?
 }
 
 /**
@@ -35,6 +36,6 @@ fun Language.isSupported() =
  * Seamless using of necessary #LanguageSupport implementation (if loaded)
  * The user don't even need to know about several implementation
  */
-fun PsiElement.findNextNamedIdentifier(): PsiElement? =
+fun PsiElement.findNextNamedIdentifier(): PsiNamedElement? =
     PLUGIN_EP_NAME.findFirstSafe { it.supportedLanguage() == this.language }
         ?.findNextNamedIdentifier(this)
