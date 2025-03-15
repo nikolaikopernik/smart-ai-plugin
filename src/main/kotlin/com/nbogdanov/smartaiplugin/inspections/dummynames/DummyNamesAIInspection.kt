@@ -7,8 +7,9 @@ import com.intellij.codeInspection.ProblemHighlightType
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
-import com.intellij.psi.util.PsiTreeUtil
 import com.nbogdanov.smartaiplugin.AIService
+import com.nbogdanov.smartaiplugin.language.findNextNamedIdentifier
+import com.nbogdanov.smartaiplugin.language.isSupported
 
 class DummyNamesAIInspection : LocalInspectionTool() {
 
@@ -16,25 +17,35 @@ class DummyNamesAIInspection : LocalInspectionTool() {
      * Actual inspection
      */
     override fun checkFile(file: PsiFile, manager: InspectionManager, isOnTheFly: Boolean): Array<ProblemDescriptor> {
-        println("Running dummy inspection for ${file.virtualFile.toNioPath()}")
         val response = getService().ask(DummyNameAIRequest(file.language, file.virtualFile.toNioPath()))
         return response.problems
             .map { it ->
-                manager.createProblemDescriptor(locateProblem(file, it.problematicCode),
+                val problematicElement = locateProblem(file, it.problematicCode)
+                return@map if (problematicElement == null)
+                    // If we didn't locate the problem based on AI response?
+                    // let's not bother the user and ignore it, but need to record this case
+                    null
+                else manager.createProblemDescriptor(problematicElement,
                     "DummyAI: ${it.explanation}",
                     true,
                     emptyArray(),
                     ProblemHighlightType.WARNING)
             }
+            .filterNotNull()
             .toTypedArray()
     }
 
-    private fun locateProblem(file: PsiFile, codeFragment: String): PsiElement {
+    /**
+     * This will remove unnecessary requests to OpenAI for files we are not interested in
+     */
+    override fun isAvailableForFile(file: PsiFile): Boolean {
+        return file.language.isSupported()
+    }
+
+    private fun locateProblem(file: PsiFile, codeFragment: String): PsiElement? {
         val offset = file.text.indexOf(codeFragment)
-        return PsiTreeUtil.findCommonParent(
-            file.findElementAt(offset),
-            file.findElementAt(offset + codeFragment.length)
-        ) ?: file
+        val element = file.findElementAt(offset) ?: return null
+        return element.findNextNamedIdentifier()
     }
 
     private fun getService() = ApplicationManager.getApplication()

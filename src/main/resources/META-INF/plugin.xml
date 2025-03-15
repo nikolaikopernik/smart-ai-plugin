@@ -1,24 +1,22 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
-    <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
-    <id>com.nbogdanov.smart-ai-plugin</id>
-
-    <!-- Public plugin name should be written in Title Case.
-         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
+    <id>com.nbogdanov.smartaiplugin</id>
     <name>Dummy AI plugin</name>
 
-    <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
     <vendor url="https://www.jetbrains.com">JetBrains</vendor>
 
-    <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
-         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
-    <description><![CDATA[
-    Just a toy project to test the skills creating AI powered plugin
-  ]]></description>
+    <description>Just a toy project to test the skills creating AI powered plugin</description>
 
-    <!-- Product and plugin compatibility requirements.
-         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
     <depends>com.intellij.modules.platform</depends>
+    <depends optional="true" config-file="smartai-java.xml">com.intellij.java</depends>
+    <depends optional="true" config-file="smartai-kotlin.xml">org.jetbrains.kotlin</depends>
+
+    <extensionPoints>
+        <!-- This will allow us to load several implementations dynamically depending on installed plugins -->
+        <extensionPoint interface="com.nbogdanov.smartaiplugin.language.LanguageSupport"
+                        name="languageSupport"
+                        dynamic="true"/>
+    </extensionPoints>
 
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->

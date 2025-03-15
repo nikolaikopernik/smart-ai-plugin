@@ -13,9 +13,9 @@ class DummyNameAIRequest(val lang: Language, val file: Path) : AIRequest {
         """
             Analyze the provided source code in ${lang.id} and spot all the dummy names 
             in variables fields and methods. Example of dummy names: a,b,d,x,y,a1,v3,foo,bar etc. 
-            Be patient and report only severe problems.
+            Do not suggest further code improvements apart from naming.
             For every spotted problem, use the following format:
-              [{problematicCode:<name only here>, explanation:<explanation>,solutionCode:<proposed name here>},{...}]
+              [{problematicCode:..., explanation:...,solutionCode:...},{...}]
             Do not add any other text apart of this json.
         """.intern()
 
