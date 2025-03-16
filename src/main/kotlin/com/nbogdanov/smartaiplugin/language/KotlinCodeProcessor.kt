@@ -4,10 +4,12 @@ import com.intellij.lang.Language
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNamedElement
 import org.jetbrains.kotlin.idea.KotlinLanguage
+import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtProperty
+import org.toml.lang.psi.ext.elementType
 
 /**
  * Some language support once needed.
@@ -34,13 +36,14 @@ open class KotlinCodeProcessor : LanguageSupport {
                 current = current.nextSibling
             }
         }
-        return if (isNamed(current)) current as PsiNamedElement else null
+        return if (isNamed(current)) current.parent as PsiNamedElement else null
     }
 
     protected open fun isNamed(element: PsiElement): Boolean =
-        when (element) {
-            is KtClass, is KtProperty, is KtNamedFunction, is KtParameter -> true
+        element.elementType == KtTokens.IDENTIFIER &&
+                when (element.parent) {
+                    is KtClass, is KtProperty, is KtNamedFunction, is KtParameter -> true
 
-            else -> false
-        }
+                    else -> false
+                }
 }

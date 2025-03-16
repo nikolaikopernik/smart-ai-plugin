@@ -72,8 +72,8 @@ class DummyNamesInspection : LocalInspectionTool() {
         }
         return element.findNextNamedIdentifier()?.let { it ->
             // final check
-            // if AI returned name only - let's double check we found the correct element
-            if (problemCodeFragment.indexOf(" ") < 0 && it.name.equals(problemCodeFragment))
+            // if AI returned name only - let's double-check we found the correct element
+            if (problemCodeFragment.indexOf(" ") > 0 || it.name.equals(problemCodeFragment))
                 it
             else
                 null
