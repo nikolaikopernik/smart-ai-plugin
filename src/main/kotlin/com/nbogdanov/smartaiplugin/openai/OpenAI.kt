@@ -41,12 +41,12 @@ class OpenAI {
                 })
             .model(query.modelPreference())
             .build()
-        val chatCompletion = dummy()
-//        val chatCompletion = client.async()
-//            .chat().completions()
-//            .create(params)
-//            .await()
-//            .also { log.warn("AI RESPONSE:\n" + it.choices().first().message().content().orElse("EMPTY")) }
+//        val chatCompletion = dummy()
+        val chatCompletion = client.async()
+            .chat().completions()
+            .create(params)
+            .await()
+            .also { log.warn("AI RESPONSE:\n" + it.choices().first().message().content().orElse("EMPTY")) }
         return parseResponse(chatCompletion)
     }
 

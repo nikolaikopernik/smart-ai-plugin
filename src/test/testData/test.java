@@ -66,7 +66,7 @@ public class StringDecoderBenchmark {
         int totalSize;
 
         @Param("2000")
-        int chunkSize;
+        int sink;
 
         List<DataBuffer> a;
 

@@ -1,3 +1,5 @@
+import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+
 plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "2.1.0"
@@ -26,9 +28,11 @@ dependencies {
         bundledPlugin("org.jetbrains.kotlin")
 
         implementation("com.openai:openai-java:0.33.0")
-        runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")
+//        runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")
 
-        testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)
+        testFramework(TestFrameworkType.Platform)
+        testImplementation("org.mockito:mockito-core:5.16.0")
+        testImplementation("org.mockito.kotlin:mockito-kotlin:5.1.0") // Kotlin support
     }
 
 }
