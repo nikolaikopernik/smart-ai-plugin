@@ -7,9 +7,11 @@ import com.intellij.codeInspection.util.IntentionName
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
 import com.intellij.refactoring.rename.RenameProcessor
+import com.nbogdanov.smartaiplugin.statistics.Inspection.dummy_names
+import com.nbogdanov.smartaiplugin.statistics.Statistics
 
 /**
- * Simple fix to rename the element according to AI suggestion
+ * A simple fix to rename the element according to AI suggestion
  */
 class DummyNamesFix(val proposedName: String) : LocalQuickFix {
     override fun getName(): @IntentionName String = "Rename to '$proposedName'"
@@ -19,6 +21,7 @@ class DummyNamesFix(val proposedName: String) : LocalQuickFix {
     override fun startInWriteAction(): Boolean = false
 
     override fun applyFix(project: Project, problemDescriptor: ProblemDescriptor) {
+        Statistics.logFixApplied(dummy_names)
         val element: PsiElement = problemDescriptor.psiElement
         RenameProcessor(project,
             element,

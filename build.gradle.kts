@@ -28,7 +28,6 @@ dependencies {
         bundledPlugin("org.jetbrains.kotlin")
 
         implementation("com.openai:openai-java:0.33.0")
-//        runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")
 
         testFramework(TestFrameworkType.Platform)
         testImplementation("org.mockito:mockito-core:5.16.0")

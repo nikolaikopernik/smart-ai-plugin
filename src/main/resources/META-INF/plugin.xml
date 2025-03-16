@@ -28,5 +28,7 @@
                          enabledByDefault="true"
                          level="WARNING"
                          implementationClass="com.nbogdanov.smartaiplugin.inspections.dummynames.DummyNamesInspection"/>
+
+        <statistics.counterUsagesCollector implementationClass="com.nbogdanov.smartaiplugin.statistics.Statistics"/>
     </extensions>
 </idea-plugin>

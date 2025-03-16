@@ -1,18 +1,21 @@
 package com.nbogdanov.smartaiplugin.openai
 
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.intellij.openapi.diagnostic.Logger
 import com.nbogdanov.smartaiplugin.openai.model.AIRequest
-import com.nbogdanov.smartaiplugin.openai.model.AIResponse
+import com.nbogdanov.smartaiplugin.statistics.CommunicationIssues
+import com.nbogdanov.smartaiplugin.statistics.Statistics
+import com.nbogdanov.smartaiplugin.statistics.debug
+import com.nbogdanov.smartaiplugin.statistics.warn
 import com.openai.client.okhttp.OpenAIOkHttpClient
+import com.openai.errors.*
 import com.openai.models.*
 import kotlinx.coroutines.future.await
-import java.util.Optional
-import java.util.UUID
+import java.io.File
+import java.io.IOException
+import java.util.*
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 private val log = Logger.getInstance(OpenAI::class.java)
 
@@ -20,54 +23,80 @@ private val log = Logger.getInstance(OpenAI::class.java)
  * Here we apply our domain AI requests and parse to domain AI responses
  */
 class OpenAI {
-
-    val mapper: ObjectMapper = jacksonObjectMapper().registerKotlinModule()
     val client = OpenAIOkHttpClient.fromEnv()
 
     /**
      * Calling OpenAI to get the results
+     * If model is not ready/finished or there are some network issues, or the response
+     * cannot be parsed - then en null response is returned
      */
-    suspend fun ask(query: AIRequest): AIResponse {
+    suspend fun <T> ask(query: AIRequest<T>): T? {
         val params = ChatCompletionCreateParams.builder()
             .addSystemMessage(query.systemMessage())
             .addUserMessage(query.userMessage())
-            .addUserMessageOfArrayOfContentParts(query.attachments()
-                .map {
-                    ChatCompletionContentPart.ofText(
-                        ChatCompletionContentPartText.builder()
-                            .text(it.toFile().readText())
-                            .build()
-                    )
-                })
+            .addUserMessageOfArrayOfContentParts(listOf(
+                ChatCompletionContentPart.ofText(
+                    ChatCompletionContentPartText.builder()
+                        .text(query.fileContent())
+                        .build()))
+            )
             .model(query.modelPreference())
             .build()
-//        val chatCompletion = dummy()
-        val chatCompletion = client.async()
-            .chat().completions()
-            .create(params)
-            .await()
-            .also { log.warn("AI RESPONSE:\n" + it.choices().first().message().content().orElse("EMPTY")) }
-        return parseResponse(chatCompletion)
+            .also {
+                log.debug { "OpenAI request: $it" }
+            }
+
+        val chatCompletion = try {
+            client.async().chat().completions().create(params)
+                .orTimeout(30, TimeUnit.SECONDS)
+                .await()
+                .also {
+                    // FIXME remove
+                    val response = it.choices().firstOrNull()?.message()?.content()?.orElse(null) ?: "NULL"
+                    File("/opt/workspace/smart-ai-plugin/openai-response.txt").writeText(response)
+                    log.debug {
+                        "OpenAI RESPONSE: $response"
+                    }
+                }
+        } catch (ex: Exception) {
+            log.warn(ex) { "Cannot get response from OpenAI" }
+            val issue = when (ex) {
+                is OpenAIIoException, is IOException -> CommunicationIssues.io_exception
+                is BadRequestException, is PermissionDeniedException, is NotFoundException, is UnprocessableEntityException, is RateLimitException, is UnauthorizedException -> CommunicationIssues.http_4xx
+                is InternalServerException -> CommunicationIssues.http_5xx
+                is TimeoutException -> CommunicationIssues.timeout
+                else -> CommunicationIssues.other
+            }
+            Statistics.logNetworkIssue(query.inspection(), issue)
+            return null
+        }
+        return parseResponse(query, chatCompletion)
     }
 
-    fun parseResponse(completion: ChatCompletion): AIResponse {
+    fun <T> parseResponse(query: AIRequest<T>, completion: ChatCompletion): T? {
         val choice = completion.choices().firstOrNull()
         if (choice == null || choice.finishReason() != ChatCompletion.Choice.FinishReason.STOP) {
-            throw RuntimeException("Empty or incorrect finish reason: ${choice?.finishReason()}")
+            log.warn { "Empty or incorrect finish reason: ${choice?.finishReason()}" }
+            Statistics.logModelNotFinished(query.inspection())
+            return null
         }
         if (choice.message().refusal().isPresent) {
-            throw RuntimeException("Model refuses to provide response with the reason: ${
-                choice.message().refusal().get()
-            }")
+            log.warn { "Model refuses to provide response with the reason: ${choice.message().refusal().get()}" }
+            Statistics.logModelNotFinished(query.inspection())
+            return null
         }
         val text = choice.message().content().orElse("")
-            .also { log.info("OpenAI response:\n $it") }
             .lines()
             .filter { !it.startsWith("```") }
             .joinToString(separator = " ")
             .trim()
-        return AIResponse(problems = mapper.readValue(text),
-            chatId = completion.id())
+        try {
+            return query.parse(completion.id(), text)
+        } catch (ex: Exception) {
+            log.warn(ex) { "Cannot parse response from OpenAI" }
+            Statistics.logModelJsonIssue(query.inspection())
+            return null
+        }
     }
 
     fun dummy(): ChatCompletion {
