@@ -17,6 +17,8 @@ class JavaCodeProcessor : LanguageSupport {
             it.elementType == JavaTokenType.IDENTIFIER && it.parent is PsiMethod
         }?.parent
 
+    override fun isMethod(element: PsiElement): Boolean = element is PsiMethod
+
     private fun PsiElement.isNamed(): Boolean =
         this.elementType == JavaTokenType.IDENTIFIER &&
                 when (this.parent) {

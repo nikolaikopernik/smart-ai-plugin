@@ -31,6 +31,8 @@ open class KotlinCodeProcessor : LanguageSupport {
     override fun findNextMethod(element: PsiElement): PsiElement? =
         element.checkSurroundCode { it.elementType == KtTokens.IDENTIFIER && it.parent is KtNamedFunction }?.parent
 
+    override fun isMethod(element: PsiElement): Boolean = element is KtNamedFunction
+
     private fun PsiElement.isNamed(): Boolean =
         this.elementType == KtTokens.IDENTIFIER &&
                 when (this.parent) {

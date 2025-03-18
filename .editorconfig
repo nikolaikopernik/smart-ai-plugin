@@ -1,0 +1,4 @@
+[.kt]
+ij_any_call_parameters_new_line_after_left_paren = true
+ij_any_align_multiline_parameters = true
+ij_any_align_multiline_parameters_in_calls = true

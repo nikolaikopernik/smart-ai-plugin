@@ -5,20 +5,28 @@ import com.intellij.codeInspection.ProblemDescriptor
 import com.intellij.codeInspection.util.IntentionFamilyName
 import com.intellij.codeInspection.util.IntentionName
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.command.WriteCommandAction
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.VisualPosition
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiFileFactory
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.ui.awt.RelativePoint
 import com.nbogdanov.smartaiplugin.AIService
+import com.nbogdanov.smartaiplugin.language.findTopLevelMethods
 import com.nbogdanov.smartaiplugin.statistics.Inspection
 import com.nbogdanov.smartaiplugin.statistics.Statistics
-import com.nbogdanov.smartaiplugin.ui.ComplexityRefactorConfirmation
+import com.nbogdanov.smartaiplugin.statistics.warn
+import com.nbogdanov.smartaiplugin.ui.ComplexityRefactorConfirmationComponent
+import org.jetbrains.kotlin.idea.base.util.reformat
 import org.jetbrains.kotlin.idea.codeinsight.utils.findExistingEditor
 
+private val log = Logger.getInstance(ComplexityFix::class.java)
 
 /**
  * A simple fix to rename the element according to AI suggestion
@@ -41,7 +49,7 @@ class ComplexityFix() : LocalQuickFix {
         val editor = element.findExistingEditor()!!
         val visualPosition: VisualPosition = editor.offsetToVisualPosition(element.textOffset)
         val point = editor.visualPositionToXY(visualPosition)
-        val factory = JavaPsiFacade.getElementFactory(project)
+        JavaPsiFacade.getElementFactory(project)
         val relativePoint = RelativePoint(editor.contentComponent, point)
 
         object : Task.Backgroundable(project, "Asking AI", false) {
@@ -51,24 +59,40 @@ class ComplexityFix() : LocalQuickFix {
 
                 // Update UI on EDT
                 ApplicationManager.getApplication().invokeLater(Runnable {
-                    val confirmation =
-                        ComplexityRefactorConfirmation(response!!, project, element.containingFile.language) {
-                            applyRefactoring()
-                        }
-                    JBPopupFactory.getInstance()
-                        .createComponentPopupBuilder(confirmation,
-                            null
-                        )
-                        .setCancelOnClickOutside(true)
-                        .setResizable(true)
-                        .createPopup()
-                        .show(relativePoint)
+                    ComplexityRefactorConfirmationComponent(
+                        code = response!!,
+                        project = project,
+                        language = element.containingFile.language,
+                        relativePoint = relativePoint,
+                        apply = { applyRefactoring(element, project, response) },
+                        cancel = { Statistics.logFixShownRefactorCancelled() }
+                    ).showConfirmation()
                 })
             }
         }.queue()
     }
 
-    private fun applyRefactoring() {
+    private fun applyRefactoring(element: PsiElement, project: Project, newCode: String) {
         println("Ready to refactor")
+        val psiFile: PsiFile = element.containingFile
+        val newPsiFile = PsiFileFactory.getInstance(project).createFileFromText(psiFile.language, newCode)
+        val factory = JavaPsiFacade.getElementFactory(project)
+        val parent = element.parent
+        val newElement = PsiTreeUtil.findChildOfType(psiFile, PsiElement::class.java)!!
+        val methods = newPsiFile.findTopLevelMethods()
+        if (methods.isEmpty()) {
+            // not good, we cannot find the necessary code, should not proceed with refactoring
+            log.warn { "Cannot interpret the suggestion from AI. Aborting refactoring." }
+            Statistics.logFixShownRefactorFailed()
+        } else {
+            WriteCommandAction.runWriteCommandAction(project, Runnable {
+                methods.forEach {
+                    parent.addBefore(it, element)
+                }
+                element.delete()
+                parent.reformat(false)
+                Statistics.logFixApplied(Inspection.complexity)
+            })
+        }
     }
 }

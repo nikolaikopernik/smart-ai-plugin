@@ -25,6 +25,28 @@ interface LanguageSupport {
      * There might be overloaded methods and so on.
      */
     fun findNextMethod(element: PsiElement): PsiElement?
+
+    fun isMethod(element: PsiElement): Boolean
+
+    fun findTopLevelMethods(element: PsiElement): List<PsiElement> {
+        var current = mutableListOf(element)
+        var result = mutableListOf(element)
+        var found = false
+        while (!found && current.isNotEmpty()) {
+            var nextLevel = current.flatMap {
+                if (isMethod(it)) {
+                    result.add(it)
+                    found = true
+                    emptyList()
+                } else {
+                    it.children.toList()
+                }
+            }
+            current.clear()
+            current.addAll(nextLevel)
+        }
+        return result
+    }
 }
 
 /**
@@ -51,3 +73,7 @@ fun PsiElement.findNextNamedIdentifier(): PsiNamedElement? =
 fun PsiElement.findNextMethod(): PsiElement? =
     PLUGIN_EP_NAME.findFirstSafe { it.supportedLanguage() == this.language }
         ?.findNextMethod(this)
+
+fun PsiElement.findTopLevelMethods() =
+    PLUGIN_EP_NAME.findFirstSafe { it.supportedLanguage() == this.language }
+        ?.findTopLevelMethods(this) ?: emptyList()

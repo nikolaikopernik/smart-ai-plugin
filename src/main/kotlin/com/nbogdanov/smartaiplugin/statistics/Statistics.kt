@@ -26,6 +26,8 @@ object Statistics : CounterUsagesCollector() {
     private val EVENT_MODEL_JSON_ISSUE = GROUP.registerEvent("model-incorrect-json", EventFields.Enum<Inspection>("inspection"))
     private val EVENT_CANNOT_LOCATE_CODE = GROUP.registerEvent("cannot-locate-code", EventFields.Enum<Inspection>("inspection"), EventFields.Enum<Lang>("lang"))
     private val EVENT_FIX_SHOWN = GROUP.registerEvent("fix-shown", EventFields.Enum<Inspection>("inspection"))
+    private val EVENT_REFACTOR_FAILED = GROUP.registerEvent("fix-shown-refactor-failed", EventFields.Enum<Inspection>("inspection"))
+    private val EVENT_REFACTOR_CANCELLED = GROUP.registerEvent("fix-shown-refactor-cancelled", EventFields.Enum<Inspection>("inspection"))
     private val EVENT_FIX_APPLIED = GROUP.registerEvent("fix-applied", EventFields.Enum<Inspection>("inspection"))
     //@formatter:on
 
@@ -58,6 +60,15 @@ object Statistics : CounterUsagesCollector() {
     fun logFixApplied(inspection: Inspection) {
         EVENT_FIX_APPLIED.increment(inspection)
     }
+
+    fun logFixShownRefactorFailed() {
+        EVENT_REFACTOR_FAILED.increment(Inspection.complexity)
+    }
+
+    fun logFixShownRefactorCancelled() {
+        EVENT_REFACTOR_CANCELLED.increment(Inspection.complexity)
+    }
+
 
     private fun <T> EventId1<T>.increment(a: T) {
         this.log(a)
