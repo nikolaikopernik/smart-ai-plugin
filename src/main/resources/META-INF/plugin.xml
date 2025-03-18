@@ -25,9 +25,17 @@
                          displayName="Check code for usages of dummy names"
                          groupName="AI"
                          hasStaticDescription="true"
-                         enabledByDefault="true"
+                         enabledByDefault="false"
                          level="WARNING"
                          implementationClass="com.nbogdanov.smartaiplugin.inspections.dummynames.DummyNamesInspection"/>
+
+        <localInspection shortName="AIHighComplexity"
+                         displayName="It finds very complex methods and suggests how to refactor it"
+                         groupName="AI"
+                         hasStaticDescription="true"
+                         enabledByDefault="true"
+                         level="WARNING"
+                         implementationClass="com.nbogdanov.smartaiplugin.inspections.complexity.ComplexityInspection"/>
 
         <statistics.counterUsagesCollector implementationClass="com.nbogdanov.smartaiplugin.statistics.Statistics"/>
     </extensions>

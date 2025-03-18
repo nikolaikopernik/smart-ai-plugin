@@ -2,6 +2,7 @@ package com.nbogdanov.smartaiplugin.openai
 
 
 import com.intellij.openapi.diagnostic.Logger
+import com.nbogdanov.smartaiplugin.inspections.complexity.FindComplexMethodsRequest
 import com.nbogdanov.smartaiplugin.openai.model.AIRequest
 import com.nbogdanov.smartaiplugin.statistics.CommunicationIssues
 import com.nbogdanov.smartaiplugin.statistics.Statistics
@@ -20,7 +21,8 @@ import java.util.concurrent.TimeoutException
 private val log = Logger.getInstance(OpenAI::class.java)
 
 /**
- * Here we apply our domain AI requests and parse to domain AI responses
+ * Here we apply our OpenAI requests and parse to domain AI responses
+ * The main method is suspendable, but it need to be called from within some coroutine
  */
 class OpenAI {
     val client = OpenAIOkHttpClient.fromEnv()
@@ -47,17 +49,18 @@ class OpenAI {
             }
 
         val chatCompletion = try {
-            client.async().chat().completions().create(params)
-                .orTimeout(30, TimeUnit.SECONDS)
-                .await()
-                .also {
-                    // FIXME remove
-                    val response = it.choices().firstOrNull()?.message()?.content()?.orElse(null) ?: "NULL"
-                    File("/opt/workspace/smart-ai-plugin/openai-response.txt").writeText(response)
-                    log.debug {
-                        "OpenAI RESPONSE: $response"
-                    }
-                }
+            dummy(query)
+//            client.async().chat().completions().create(params)
+//                .orTimeout(30, TimeUnit.SECONDS)
+//                .await()
+//                .also {
+//                    // FIXME remove
+//                    val response = it.choices().firstOrNull()?.message()?.content()?.orElse(null) ?: "NULL"
+//                    File("/opt/workspace/smart-ai-plugin/openai-response.txt").writeText(response)
+//                    log.warn {
+//                        "OpenAI RESPONSE: $response"
+//                    }
+//                }
         } catch (ex: Exception) {
             log.warn(ex) { "Cannot get response from OpenAI" }
             val issue = when (ex) {
@@ -88,7 +91,7 @@ class OpenAI {
         val text = choice.message().content().orElse("")
             .lines()
             .filter { !it.startsWith("```") }
-            .joinToString(separator = " ")
+            .joinToString(separator = "\n")
             .trim()
         try {
             return query.parse(completion.id(), text)
@@ -99,14 +102,18 @@ class OpenAI {
         }
     }
 
-    fun dummy(): ChatCompletion {
+    fun <T> dummy(query:AIRequest<T>): ChatCompletion {
         return ChatCompletion.builder()
             .id(UUID.randomUUID().toString())
             .created(1L)
             .model("sdfsdf")
             .choices(listOf(ChatCompletion.Choice.builder()
                 .message(ChatCompletionMessage.builder()
-                    .content(this.javaClass.getResource("/dummy.txt").readText())
+                    .content(File( if(query is FindComplexMethodsRequest)
+                        "/opt/workspace/smart-ai-plugin/openai-response2.txt"
+                    else
+                        "/opt/workspace/smart-ai-plugin/openai-response3.txt"
+                    ).readText())
                     .refusal(Optional.empty<String>())
                     .build())
                 .index(1L)

@@ -24,26 +24,33 @@ open class KotlinCodeProcessor : LanguageSupport {
      * aroundings of the given element.
      * Mostly we check all the following siblings (but also switching to parent and doing the same there)
      */
-    override fun findNextNamedIdentifier(element: PsiElement): PsiNamedElement? {
-        var current = element
-        while (!isNamed(current) && current.nextSibling != null) {
-            current = current.nextSibling
-        }
-        if (!isNamed(current)) {
-            //try parents
-            current = current.parent
-            while (!isNamed(current) && current.nextSibling != null) {
-                current = current.nextSibling
-            }
-        }
-        return if (isNamed(current)) current.parent as PsiNamedElement else null
-    }
+    override fun findNextNamedIdentifier(element: PsiElement): PsiNamedElement? =
+        element.checkSurroundCode { it.isNamed() }?.parent as PsiNamedElement
 
-    protected open fun isNamed(element: PsiElement): Boolean =
-        element.elementType == KtTokens.IDENTIFIER &&
-                when (element.parent) {
+
+    override fun findNextMethod(element: PsiElement): PsiElement? =
+        element.checkSurroundCode { it.elementType == KtTokens.IDENTIFIER && it.parent is KtNamedFunction }?.parent
+
+    private fun PsiElement.isNamed(): Boolean =
+        this.elementType == KtTokens.IDENTIFIER &&
+                when (this.parent) {
                     is KtClass, is KtProperty, is KtNamedFunction, is KtParameter -> true
 
                     else -> false
                 }
+}
+
+fun PsiElement.checkSurroundCode(predicate: (PsiElement) -> Boolean): PsiElement? {
+    var current = this
+    while (!predicate(current) && current.nextSibling != null) {
+        current = current.nextSibling
+    }
+    if (!predicate(current)) {
+        //try parents
+        current = current.parent
+        while (!predicate(current) && current.nextSibling != null) {
+            current = current.nextSibling
+        }
+    }
+    return if (predicate(current)) current else null
 }

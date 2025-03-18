@@ -5,13 +5,21 @@ import com.intellij.lang.java.JavaLanguage
 import com.intellij.psi.*
 import org.toml.lang.psi.ext.elementType
 
-class JavaCodeProcessor : KotlinCodeProcessor() {
+class JavaCodeProcessor : LanguageSupport {
 
     override fun supportedLanguage(): Language = JavaLanguage.INSTANCE
 
-    override fun isNamed(element: PsiElement): Boolean =
-        element.elementType == JavaTokenType.IDENTIFIER &&
-                when (element.parent) {
+    override fun findNextNamedIdentifier(element: PsiElement): PsiNamedElement? =
+        element.checkSurroundCode { it.isNamed() }?.parent as PsiNamedElement
+
+    override fun findNextMethod(element: PsiElement): PsiElement? =
+        element.checkSurroundCode {
+            it.elementType == JavaTokenType.IDENTIFIER && it.parent is PsiMethod
+        }?.parent
+
+    private fun PsiElement.isNamed(): Boolean =
+        this.elementType == JavaTokenType.IDENTIFIER &&
+                when (this.parent) {
                     is PsiClass, is PsiMethod, is PsiLocalVariable, is PsiParameter, is PsiField -> true
 
                     else -> false
