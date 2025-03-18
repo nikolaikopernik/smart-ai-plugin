@@ -54,7 +54,7 @@ class ComplexityRefactorConfirmationComponent(val code: String,
         this.layout = BorderLayout()
         this.add(title, BorderLayout.NORTH)
         this.add(JBScrollPane(editorTextField), BorderLayout.CENTER)
-        this.add(JBPanel<Nothing>(FlowLayout()).also { it.add(button) }, BorderLayout.SOUTH)
+        this.add(JBPanel<Nothing>(FlowLayout(FlowLayout.LEFT)).also { it.add(button) }, BorderLayout.SOUTH)
         this.preferredSize = Dimension(400, 400)
     }
 

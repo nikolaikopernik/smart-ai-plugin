@@ -49,18 +49,18 @@ class OpenAI {
             }
 
         val chatCompletion = try {
-            dummy(query)
-//            client.async().chat().completions().create(params)
-//                .orTimeout(30, TimeUnit.SECONDS)
-//                .await()
-//                .also {
-//                    // FIXME remove
-//                    val response = it.choices().firstOrNull()?.message()?.content()?.orElse(null) ?: "NULL"
-//                    File("/opt/workspace/smart-ai-plugin/openai-response.txt").writeText(response)
-//                    log.warn {
-//                        "OpenAI RESPONSE: $response"
-//                    }
-//                }
+//            dummy(query)
+            client.async().chat().completions().create(params)
+                .orTimeout(30, TimeUnit.SECONDS)
+                .await()
+                .also {
+                    // FIXME remove
+                    val response = it.choices().firstOrNull()?.message()?.content()?.orElse(null) ?: "NULL"
+                    File("/opt/workspace/smart-ai-plugin/openai-response.txt").writeText(response)
+                    log.warn {
+                        "OpenAI RESPONSE: $response"
+                    }
+                }
         } catch (ex: Exception) {
             log.warn(ex) { "Cannot get response from OpenAI" }
             val issue = when (ex) {
@@ -100,27 +100,6 @@ class OpenAI {
             Statistics.logModelJsonIssue(query.inspection())
             return null
         }
-    }
-
-    fun <T> dummy(query:AIRequest<T>): ChatCompletion {
-        return ChatCompletion.builder()
-            .id(UUID.randomUUID().toString())
-            .created(1L)
-            .model("sdfsdf")
-            .choices(listOf(ChatCompletion.Choice.builder()
-                .message(ChatCompletionMessage.builder()
-                    .content(File( if(query is FindComplexMethodsRequest)
-                        "/opt/workspace/smart-ai-plugin/openai-response2.txt"
-                    else
-                        "/opt/workspace/smart-ai-plugin/openai-response3.txt"
-                    ).readText())
-                    .refusal(Optional.empty<String>())
-                    .build())
-                .index(1L)
-                .logprobs(Optional.empty())
-                .finishReason(ChatCompletion.Choice.FinishReason.STOP)
-                .build()))
-            .build()
     }
 
     fun close() {

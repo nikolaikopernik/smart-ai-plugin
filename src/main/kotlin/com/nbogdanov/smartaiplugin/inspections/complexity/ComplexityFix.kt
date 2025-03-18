@@ -11,11 +11,9 @@ import com.intellij.openapi.editor.VisualPosition
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
-import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiFileFactory
-import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.ui.awt.RelativePoint
 import com.nbogdanov.smartaiplugin.AIService
 import com.nbogdanov.smartaiplugin.language.findTopLevelMethods
@@ -29,7 +27,9 @@ import org.jetbrains.kotlin.idea.codeinsight.utils.findExistingEditor
 private val log = Logger.getInstance(ComplexityFix::class.java)
 
 /**
- * A simple fix to rename the element according to AI suggestion
+ * This is not that simple fix.
+ * It first shows the popup with the proposal from LLM on how to improve the method.
+ * If user agrees with it, it will replace the old method with the one (or several) proposed methods.
  */
 class ComplexityFix() : LocalQuickFix {
     override fun getName(): @IntentionName String = "DummyAI: Refactor with AI"
@@ -42,17 +42,15 @@ class ComplexityFix() : LocalQuickFix {
      * This method is called from EDT so cannot block it and need to do the rest in background
      */
     override fun applyFix(project: Project, problemDescriptor: ProblemDescriptor) {
-        Statistics.logFixApplied(Inspection.complexity)
         val element: PsiElement = problemDescriptor.psiElement
         val aiRequest = RefactorMethodRequest(element.language, element.text)
         // Get the element's position in the editor
         val editor = element.findExistingEditor()!!
         val visualPosition: VisualPosition = editor.offsetToVisualPosition(element.textOffset)
         val point = editor.visualPositionToXY(visualPosition)
-        JavaPsiFacade.getElementFactory(project)
         val relativePoint = RelativePoint(editor.contentComponent, point)
 
-        object : Task.Backgroundable(project, "Asking AI", false) {
+        object : Task.Backgroundable(project, "Asking AI...", false) {
             override fun run(indicator: ProgressIndicator) {
                 val service = ApplicationManager.getApplication().getService(AIService::class.java)
                 val response = service.ask(aiRequest)
@@ -73,12 +71,9 @@ class ComplexityFix() : LocalQuickFix {
     }
 
     private fun applyRefactoring(element: PsiElement, project: Project, newCode: String) {
-        println("Ready to refactor")
         val psiFile: PsiFile = element.containingFile
         val newPsiFile = PsiFileFactory.getInstance(project).createFileFromText(psiFile.language, newCode)
-        val factory = JavaPsiFacade.getElementFactory(project)
         val parent = element.parent
-        val newElement = PsiTreeUtil.findChildOfType(psiFile, PsiElement::class.java)!!
         val methods = newPsiFile.findTopLevelMethods()
         if (methods.isEmpty()) {
             // not good, we cannot find the necessary code, should not proceed with refactoring

@@ -30,7 +30,7 @@ interface LanguageSupport {
 
     fun findTopLevelMethods(element: PsiElement): List<PsiElement> {
         var current = mutableListOf(element)
-        var result = mutableListOf(element)
+        var result = mutableListOf<PsiElement>()
         var found = false
         while (!found && current.isNotEmpty()) {
             var nextLevel = current.flatMap {
