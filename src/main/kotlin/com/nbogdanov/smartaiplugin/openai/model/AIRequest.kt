@@ -12,8 +12,8 @@ interface AIRequest<T> {
     fun userMessage(): String
     fun filePath(): String
     fun fileContent(): String
-    fun modelPreference(): ChatModel
+    fun modelPreference(): ChatModel = ChatModel.Companion.GPT_4O_2024_08_06
     fun inspection(): Inspection
-
+    fun canUsePartialFile(): Boolean = true
     fun parse(id: String, response: String): T
 }

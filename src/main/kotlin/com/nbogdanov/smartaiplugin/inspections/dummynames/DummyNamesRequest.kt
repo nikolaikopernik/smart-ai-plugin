@@ -32,8 +32,6 @@ class DummyNamesRequest(val lang: Language, val file: PsiFile) : AIRequest<AIGen
 
     override fun inspection() = Inspection.dummy_names
 
-    override fun modelPreference() = ChatModel.Companion.GPT_4O_2024_08_06
-
     override fun parse(id: String,
                        response: String): AIGeneralResponse {
         return AIGeneralResponse(

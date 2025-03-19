@@ -21,6 +21,7 @@ object Statistics : CounterUsagesCollector() {
 
     //@formatter:off
     private val EVENT_INSPECTION_TRIGGERED = GROUP.registerEvent("triggered", EventFields.Enum<Inspection>("inspection"))
+    private val EVENT_CONTEXT_TOO_LARGE = GROUP.registerEvent("context-too-large", EventFields.Enum<Inspection>("inspection"))
     private val EVENT_NETWORK_ISSUE = GROUP.registerEvent("network-issue", EventFields.Enum<Inspection>("inspection"), EventFields.Enum<CommunicationIssues>("issue"))
     private val EVENT_MODEL_NOT_FINISHED = GROUP.registerEvent("model-not-finished", EventFields.Enum<Inspection>("inspection"))
     private val EVENT_MODEL_JSON_ISSUE = GROUP.registerEvent("model-incorrect-json", EventFields.Enum<Inspection>("inspection"))
@@ -72,6 +73,10 @@ object Statistics : CounterUsagesCollector() {
 
     fun logNoProblems(inspection: Inspection) {
         EVENT_NO_PROBLEMS_TO_SHOW.increment(inspection)
+    }
+
+    fun logContextTooLarge(inspection: Inspection) {
+        EVENT_CONTEXT_TOO_LARGE.increment(inspection)
     }
 
 

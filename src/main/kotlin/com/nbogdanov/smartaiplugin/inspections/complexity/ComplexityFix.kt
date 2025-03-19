@@ -54,11 +54,16 @@ class ComplexityFix() : LocalQuickFix {
             override fun run(indicator: ProgressIndicator) {
                 val service = ApplicationManager.getApplication().getService(AIService::class.java)
                 val response = service.ask(aiRequest)
+                if (response == null) {
+                    // not good, we cannot find the necessary code, should not proceed with refactoring
+                    log.warn { "Cannot get response from AI" }
+                    return
+                }
 
                 // Update UI on EDT
                 ApplicationManager.getApplication().invokeLater(Runnable {
                     ComplexityRefactorConfirmationComponent(
-                        code = response!!,
+                        code = response,
                         project = project,
                         language = element.containingFile.language,
                         relativePoint = relativePoint,

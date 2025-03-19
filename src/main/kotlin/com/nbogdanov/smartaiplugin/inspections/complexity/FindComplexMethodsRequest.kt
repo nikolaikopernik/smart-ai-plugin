@@ -37,8 +37,6 @@ class FindComplexMethodsRequest(val lang: Language, val file: PsiFile) : AIReque
 
     override fun inspection() = Inspection.complexity
 
-    override fun modelPreference() = ChatModel.Companion.GPT_4O_2024_08_06
-
     override fun parse(id: String,
                        response: String): AIMethodClassificationResponse {
         return AIMethodClassificationResponse(

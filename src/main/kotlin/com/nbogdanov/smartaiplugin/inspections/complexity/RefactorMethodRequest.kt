@@ -23,7 +23,11 @@ class RefactorMethodRequest(val lang: Language, val method: String) : AIRequest<
 
     override fun inspection() = Inspection.complexity
 
-    override fun modelPreference() = ChatModel.Companion.GPT_4O_2024_08_06
+    /**
+     * Here we need to make sure LLM gets the full method read
+     * And if it doesn't fit into request -> no suggestion at all
+     */
+    override fun canUsePartialFile(): Boolean = false
 
     override fun parse(id: String, response: String): String = response
 }
