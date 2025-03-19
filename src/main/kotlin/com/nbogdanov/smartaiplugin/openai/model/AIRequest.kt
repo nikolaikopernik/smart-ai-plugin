@@ -6,6 +6,8 @@ import com.openai.models.ChatModel
 /**
  * General request to AI
  * Different inspections can implement it.
+ * Also there is a method to parse the response. So different inspections won't have any limitations
+ * to use their own response schema
  */
 interface AIRequest<T> {
     fun systemMessage(): String

@@ -1,4 +1,4 @@
-package com.nbogdanov.smartaiplugin.openai.model
+package com.nbogdanov.smartaiplugin.inspections.dummynames
 
 import com.openai.core.JsonArray
 import com.openai.core.JsonObject
@@ -6,21 +6,16 @@ import com.openai.core.JsonValue
 import com.openai.models.ResponseFormatJsonSchema
 
 /**
- * General answer from AI
- * The idea is that although there will be many different kind of problems,
- * the answer will be very similar always:
- *  - problematic code: to find it in the source code
- *  - explanation: For user to show
- *  - solutionCode: if LLM can suggest the change
+ * Answer to have for Dummy names inspection
  */
-data class AIGeneralResponse(
+data class AIDummyNamesResponse(
     val problems: List<AIProblem>,
     val chatId: String,
 )
 
 data class AIProblem(val problematicCode: String,
                      val explanation: String,
-                     val solutionCode: String?)
+                     val proposedName: String?)
 
 /**
  * OpenAI has a way to provide a structured response,

@@ -48,9 +48,9 @@ class DummyNamesInspection : LocalInspectionTool() {
                 } else {
                     Statistics.logFixShown(dummy_names)
                     manager.createProblemDescriptor(problematicElement,
-                        "DummyAI: Rename <code>${it.problematicCode}</code> to <code>${it.solutionCode}</code>. ${it.explanation}",
+                        "DummyAI: Rename <code>${it.problematicCode}</code> to <code>${it.proposedName}</code>. ${it.explanation}",
                         true,
-                        arrayOf<LocalQuickFix>(DummyNamesFix(it.solutionCode!!)),
+                        arrayOf<LocalQuickFix>(DummyNamesFix(it.proposedName!!)),
                         ProblemHighlightType.WARNING)
                 }
             }

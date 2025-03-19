@@ -6,10 +6,8 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.intellij.lang.Language
 import com.intellij.psi.PsiFile
-import com.nbogdanov.smartaiplugin.openai.model.AIMethodClassificationResponse
 import com.nbogdanov.smartaiplugin.openai.model.AIRequest
 import com.nbogdanov.smartaiplugin.statistics.Inspection
-import com.openai.models.ChatModel
 
 private val mapper: ObjectMapper = jacksonObjectMapper().registerKotlinModule()
 

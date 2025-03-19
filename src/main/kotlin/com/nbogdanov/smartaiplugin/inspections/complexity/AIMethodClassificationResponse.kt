@@ -1,4 +1,4 @@
-package com.nbogdanov.smartaiplugin.openai.model
+package com.nbogdanov.smartaiplugin.inspections.complexity
 
 data class AIMethodClassificationResponse(
     val problems: List<AIClassification>,
