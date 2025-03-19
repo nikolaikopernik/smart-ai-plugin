@@ -38,6 +38,7 @@ class ComplexityInspection : LocalInspectionTool() {
             // metrics should be updated inside service
         }
         return response.problems
+            .filter { it.score.equals("very", ignoreCase = true) }
             .also { if (it.isEmpty()) Statistics.logNoProblems(complexity) }
             .map { it ->
                 val problematicElement = locateProblem(file, it.problematicCode)

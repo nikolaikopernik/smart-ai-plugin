@@ -13,7 +13,7 @@ import com.openai.models.ResponseFormatJsonSchema
  *  - explanation: For user to show
  *  - solutionCode: if LLM can suggest the change
  */
-data class AIResponse(
+data class AIGeneralResponse(
     val problems: List<AIProblem>,
     val chatId: String,
 )

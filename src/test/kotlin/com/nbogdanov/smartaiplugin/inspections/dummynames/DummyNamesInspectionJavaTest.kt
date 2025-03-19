@@ -5,7 +5,7 @@ import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import com.intellij.testFramework.registerServiceInstance
 import com.nbogdanov.smartaiplugin.AIService
 import com.nbogdanov.smartaiplugin.openai.model.AIProblem
-import com.nbogdanov.smartaiplugin.openai.model.AIResponse
+import com.nbogdanov.smartaiplugin.openai.model.AIGeneralResponse
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 import java.util.*
@@ -59,7 +59,7 @@ class DummyNamesInspectionJavaTest : BasePlatformTestCase() {
 
     private fun doTest(givenProblem: AIProblem,
                        expectedFile: String) {
-        whenever(service.ask(org.mockito.kotlin.any<DummyNamesRequest>())).thenReturn(AIResponse(
+        whenever(service.ask(org.mockito.kotlin.any<DummyNamesRequest>())).thenReturn(AIGeneralResponse(
             chatId = UUID.randomUUID().toString(),
             problems = listOf(givenProblem))
         )

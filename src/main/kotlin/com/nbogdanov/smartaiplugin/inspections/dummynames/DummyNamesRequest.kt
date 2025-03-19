@@ -7,13 +7,13 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.intellij.lang.Language
 import com.intellij.psi.PsiFile
 import com.nbogdanov.smartaiplugin.openai.model.AIRequest
-import com.nbogdanov.smartaiplugin.openai.model.AIResponse
+import com.nbogdanov.smartaiplugin.openai.model.AIGeneralResponse
 import com.nbogdanov.smartaiplugin.statistics.Inspection
 import com.openai.models.ChatModel
 
 private val mapper: ObjectMapper = jacksonObjectMapper().registerKotlinModule()
 
-class DummyNamesRequest(val lang: Language, val file: PsiFile) : AIRequest<AIResponse> {
+class DummyNamesRequest(val lang: Language, val file: PsiFile) : AIRequest<AIGeneralResponse> {
     override fun systemMessage() =
         "You are an experienced ${lang.id} developer."
 
@@ -35,8 +35,8 @@ class DummyNamesRequest(val lang: Language, val file: PsiFile) : AIRequest<AIRes
     override fun modelPreference() = ChatModel.Companion.GPT_4O_2024_08_06
 
     override fun parse(id: String,
-                       response: String): AIResponse {
-        return AIResponse(
+                       response: String): AIGeneralResponse {
+        return AIGeneralResponse(
             chatId = id,
             problems = mapper.readValue(response)
         )

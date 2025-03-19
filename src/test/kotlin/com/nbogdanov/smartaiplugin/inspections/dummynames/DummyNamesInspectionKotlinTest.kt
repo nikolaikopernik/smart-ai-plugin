@@ -1,14 +1,11 @@
 package com.nbogdanov.smartaiplugin.inspections.dummynames
 
-import com.intellij.codeInspection.InspectionProfileEntry
-import com.intellij.codeInspection.LocalInspectionTool
-import com.intellij.codeInspection.deadCode.UnusedDeclarationInspection
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import com.intellij.testFramework.registerServiceInstance
 import com.nbogdanov.smartaiplugin.AIService
 import com.nbogdanov.smartaiplugin.openai.model.AIProblem
-import com.nbogdanov.smartaiplugin.openai.model.AIResponse
+import com.nbogdanov.smartaiplugin.openai.model.AIGeneralResponse
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
@@ -64,7 +61,7 @@ class DummyNamesInspectionKotlinTest : BasePlatformTestCase() {
 
     private fun doTest(givenProblem: AIProblem,
                        expectedFile: String) {
-        whenever(service.ask(any<DummyNamesRequest>())).thenReturn(AIResponse(
+        whenever(service.ask(any<DummyNamesRequest>())).thenReturn(AIGeneralResponse(
             chatId = UUID.randomUUID().toString(),
             problems = listOf(givenProblem))
         )

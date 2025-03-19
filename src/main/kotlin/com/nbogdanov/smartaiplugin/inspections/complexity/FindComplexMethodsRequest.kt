@@ -6,26 +6,28 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.intellij.lang.Language
 import com.intellij.psi.PsiFile
+import com.nbogdanov.smartaiplugin.openai.model.AIMethodClassificationResponse
 import com.nbogdanov.smartaiplugin.openai.model.AIRequest
-import com.nbogdanov.smartaiplugin.openai.model.AIResponse
 import com.nbogdanov.smartaiplugin.statistics.Inspection
 import com.openai.models.ChatModel
 
 private val mapper: ObjectMapper = jacksonObjectMapper().registerKotlinModule()
 
 
-class FindComplexMethodsRequest(val lang: Language, val file: PsiFile) : AIRequest<AIResponse> {
+class FindComplexMethodsRequest(val lang: Language, val file: PsiFile) : AIRequest<AIMethodClassificationResponse> {
     override fun systemMessage() =
         "You are an experienced ${lang.id} developer."
 
     override fun userMessage() =
         """
-            Analyze the provided code in ${lang.id} and spot all functions or methods wich are 
-            very complex to analyze. It might be very long methods or methods with a lot of conditional 
-            expressions with different purposes. 
-            For the spotted methods return the method signature and a short explanation why you think the complexity of this method is very high.
-            If the code you see is a normal or medium complexity code then return an empty list.
-              [{"problematicCode": ..., "explanation": ...},{...}]
+            Analyze the provided code in ${lang.id} and classify all the method in the file by the cognitive complexity in one of the following scores:
+             - trivial - the method implementation is a single line without any complex structures,
+             - simple - couple of lines easy to understand without complex structures, 
+             - medium - these methods are more complex, but still usually fit in the screen and have a single complex structure,
+             - high - even more complex methods with several complex structures, usually those methods are longer and sometimes with bigger nesting,
+             - very - the most complex methods where it's hard to follow the code, usually very long with the combination of complex and nested structures
+            For the spotted methods return the method signature, a short explanation why you gave it that score and a score itself in the format:
+              [{"problematicCode": ..., "explanation": ..., "score":...},{...}]
             Do not add any other text apart of this json.
         """.intern()
 
@@ -38,8 +40,8 @@ class FindComplexMethodsRequest(val lang: Language, val file: PsiFile) : AIReque
     override fun modelPreference() = ChatModel.Companion.GPT_4O_2024_08_06
 
     override fun parse(id: String,
-                       response: String): AIResponse {
-        return AIResponse(
+                       response: String): AIMethodClassificationResponse {
+        return AIMethodClassificationResponse(
             chatId = id,
             problems = mapper.readValue(response)
         )
