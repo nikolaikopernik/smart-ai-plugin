@@ -30,6 +30,8 @@ As a solution, the following inspections were implemented:
   * I see there is a way to get a structured results from LLM. I spent some time trying to support it but figured out that
   the model I used for tests doesn't support it. So to not spend much time on it I went for a solution without that feature.
 > **_NOTE:_**  In order to have the plugin working you need to have a OPENAI_API_KEY env variable defined in your system.
+> Then, in order to Intellij to pick it up you need to start it from shell. Alternatively, you can provide a VM option 
+> (Help → Edit Custom VM Options...) `-DopenaiApiToken=...`
     
 ### Metrics
 My main consideration was that we cannot share pieces of code with our backend (because of privacy) and so I mostly 

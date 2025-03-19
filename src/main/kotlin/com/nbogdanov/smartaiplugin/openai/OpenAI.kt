@@ -4,17 +4,17 @@ package com.nbogdanov.smartaiplugin.openai
 import com.intellij.openapi.diagnostic.Logger
 import com.nbogdanov.smartaiplugin.openai.model.AIRequest
 import com.nbogdanov.smartaiplugin.openai.model.ContextTooLargeException
-import com.nbogdanov.smartaiplugin.statistics.CommunicationIssues
-import com.nbogdanov.smartaiplugin.statistics.Statistics
-import com.nbogdanov.smartaiplugin.statistics.debug
-import com.nbogdanov.smartaiplugin.statistics.warn
+import com.nbogdanov.smartaiplugin.statistics.*
+import com.openai.client.OpenAIClient
 import com.openai.client.okhttp.OpenAIOkHttpClient
+import com.openai.credential.BearerTokenCredential
 import com.openai.errors.*
-import com.openai.models.*
+import com.openai.models.ChatCompletion
+import com.openai.models.ChatCompletionContentPart
+import com.openai.models.ChatCompletionContentPartText
+import com.openai.models.ChatCompletionCreateParams
 import kotlinx.coroutines.future.await
-import java.io.File
 import java.io.IOException
-import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
@@ -27,7 +27,15 @@ private const val CONTEXT_WINDOW_LIMIT = 128000
  * The main method is suspendable, but it needs to be called from within some coroutine
  */
 class OpenAI {
-    val client = OpenAIOkHttpClient.fromEnv()
+    val client: OpenAIClient
+
+    init {
+        val token = System.getenv("OPENAI_API_KEY") ?: System.getProperty("openaiApiToken")
+        log.info { "Initializing OpenAI client with token $token" }
+        client = OpenAIOkHttpClient.builder()
+            .credential(BearerTokenCredential.create(token))
+            .build()
+    }
 
     /**
      * Calling OpenAI to get the results
@@ -60,6 +68,9 @@ class OpenAI {
             client.async().chat().completions().create(params)
                 .orTimeout(30, TimeUnit.SECONDS)
                 .await()
+                .also {
+                    log.info { "OpenAI response: $it" }
+                }
         } catch (ex: Exception) {
             log.warn(ex) { "Cannot get response from OpenAI" }
             val issue = when (ex) {

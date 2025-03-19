@@ -27,16 +27,15 @@ dependencies {
         bundledPlugin("com.intellij.java")
         bundledPlugin("org.jetbrains.kotlin")
 
-        implementation("com.openai:openai-java:0.33.0")
-
         testFramework(TestFrameworkType.Platform)
         testFramework(TestFrameworkType.Bundled)
         testImplementation("org.mockito:mockito-core:5.16.0")
         testImplementation("org.mockito.kotlin:mockito-kotlin:5.1.0") // Kotlin support
     }
+    implementation("com.openai:openai-java:0.33.0")
+
     testRuntimeOnly("junit:junit:4.13.2")
     testImplementation("org.opentest4j:opentest4j:1.3.0")
-
 }
 
 intellijPlatform {

@@ -10,6 +10,7 @@ import com.nbogdanov.smartaiplugin.language.findNextMethod
 import com.nbogdanov.smartaiplugin.language.isSupported
 import com.nbogdanov.smartaiplugin.statistics.Inspection.complexity
 import com.nbogdanov.smartaiplugin.statistics.Statistics
+import com.nbogdanov.smartaiplugin.statistics.info
 import com.nbogdanov.smartaiplugin.statistics.lang
 import com.nbogdanov.smartaiplugin.statistics.warn
 
@@ -32,6 +33,7 @@ class ComplexityInspection : LocalInspectionTool() {
      */
     override fun checkFile(file: PsiFile, manager: InspectionManager, isOnTheFly: Boolean): Array<ProblemDescriptor> {
         Statistics.logInspectionStarted(complexity)
+        log.info { "Checking AI complex methods in the file ${file.virtualFile.path}" }
         val response = getAIService().ask(FindComplexMethodsRequest(file.language, file))
         if (response == null) {
             return emptyArray()
@@ -39,13 +41,14 @@ class ComplexityInspection : LocalInspectionTool() {
         }
         return response.problems
             // only very complex methods deserve refactoring
-            .filter { it.score.equals("very", ignoreCase = true) }
+            .filter { it.score.lowercase() in setOf("high", "very") }
             .also { if (it.isEmpty()) Statistics.logNoProblems(complexity) }
             .map { it ->
                 val problematicElement = locateProblem(file, it.problematicCode)
                 return@map if (problematicElement == null) {
                     // If we didn't locate the problem based on AI response?
                     // let's not bother the user and ignore it, but need to record this case
+                    log.info { "Cannot locate code for '${it.problematicCode}' in file ${file.virtualFile.path}" }
                     Statistics.logCannotLocateProblemCode(complexity, file.language.lang())
                     null
                 } else {
