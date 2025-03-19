@@ -38,6 +38,7 @@ class ComplexityInspection : LocalInspectionTool() {
             // metrics should be updated inside service
         }
         return response.problems
+            // only very complex methods deserve refactoring
             .filter { it.score.equals("very", ignoreCase = true) }
             .also { if (it.isEmpty()) Statistics.logNoProblems(complexity) }
             .map { it ->
@@ -67,6 +68,12 @@ class ComplexityInspection : LocalInspectionTool() {
         return file.language.isSupported()
     }
 
+    /**
+     * This is a simplified implementation.
+     * Further improvement would be:
+     *  - asking LLM about which line contains the problem
+     *  - actually going through all PSI elements near this line to locate the problematic method
+     */
     private fun locateProblem(file: PsiFile, problemCodeFragment: String): PsiElement? {
         val offset = file.text.indexOf(problemCodeFragment)
         val element = file.findElementAt(offset)

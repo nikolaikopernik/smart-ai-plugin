@@ -60,14 +60,6 @@ class OpenAI {
             client.async().chat().completions().create(params)
                 .orTimeout(30, TimeUnit.SECONDS)
                 .await()
-                .also {
-                    // FIXME remove
-                    val response = it.choices().firstOrNull()?.message()?.content()?.orElse(null) ?: "NULL"
-                    File("/opt/workspace/smart-ai-plugin/openai-response.txt").writeText(response)
-                    log.warn {
-                        "OpenAI RESPONSE: $response"
-                    }
-                }
         } catch (ex: Exception) {
             log.warn(ex) { "Cannot get response from OpenAI" }
             val issue = when (ex) {
