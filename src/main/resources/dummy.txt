@@ -1,8 +1,0 @@
-```json
-[
-    {"problematicCode": "sink", "explanation": "The variable name 'sink' is too vague and does not indicate its purpose clearly.", "solutionCode": "complexitySink"},
-    {"problematicCode": "element", "explanation": "The variable name 'element' is non-descriptive; it does not convey what type of element it refers to within the context.", "solutionCode": "psiElement"},
-    {"problematicCode": "prev", "explanation": "The variable name 'prev' is too generic and lacks context; it should indicate what it is previous to.", "solutionCode": "previousElement"},
-    {"problematicCode": "prevOperand", "explanation": "The variable name 'prevOperand' is somewhat vague for the context of its use and can be more descriptive.", "solutionCode": "previousTokenType"}
-]
-```

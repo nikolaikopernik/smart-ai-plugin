@@ -9,8 +9,6 @@ import com.nbogdanov.smartaiplugin.openai.model.AIRequest
 /**
  * Light-weighted service not reachable anywhere outside the plugin
  * Here we can plug different LLM providers
- *
- * FIXME switch to coroutines
  */
 @Service
 class AIService : Disposable {
