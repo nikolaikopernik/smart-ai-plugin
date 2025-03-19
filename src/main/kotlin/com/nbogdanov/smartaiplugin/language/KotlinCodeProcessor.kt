@@ -22,14 +22,16 @@ open class KotlinCodeProcessor : LanguageSupport {
     /**
      * As OpenAI can both: return the dummy name only but also a piece of code it contains, we check some
      * aroundings of the given element.
-     * Mostly we check all the following siblings (but also switching to parent and doing the same there)
+     * Mostly we check all the following siblings (also parent and its siblings)
+     * Keep in mind, that this method returns IDENTIFIER, most of the time the actual variable/field/method are
+     * parents of those
      */
-    override fun findNextNamedIdentifier(element: PsiElement): PsiNamedElement? =
-        element.checkSurroundCode { it.isNamed() }?.parent as PsiNamedElement
+    override fun findNextNamedIdentifier(element: PsiElement): PsiElement? =
+        element.checkSurroundCode { it.isNamed() }
 
 
     override fun findNextMethod(element: PsiElement): PsiElement? =
-        element.checkSurroundCode { it.elementType == KtTokens.IDENTIFIER && it.parent is KtNamedFunction }?.parent
+        element.checkSurroundCode { it.elementType == KtTokens.IDENTIFIER && it.parent is KtNamedFunction }
 
     override fun isMethod(element: PsiElement): Boolean = element is KtNamedFunction
 

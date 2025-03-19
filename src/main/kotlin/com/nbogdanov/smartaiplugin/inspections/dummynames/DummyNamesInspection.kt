@@ -33,9 +33,11 @@ class DummyNamesInspection : LocalInspectionTool() {
         Statistics.logInspectionStarted(dummy_names)
         val response = getAIService().ask(DummyNamesRequest(file.language, file))
         if (response == null) {
+            // metrics should be updated inside service
             return emptyArray()
         }
         return response.problems
+            .also { if (it.isEmpty()) Statistics.logNoProblems(dummy_names) }
             .map { it ->
                 val problematicElement = locateProblem(file, it.problematicCode)
                 return@map if (problematicElement == null) {
@@ -73,7 +75,7 @@ class DummyNamesInspection : LocalInspectionTool() {
         return element.findNextNamedIdentifier()?.let { it ->
             // final check
             // if AI returned name only - let's double-check we found the correct element
-            if (problemCodeFragment.indexOf(" ") > 0 || it.name.equals(problemCodeFragment))
+            if (problemCodeFragment.indexOf(" ") > 0 || it.text.equals(problemCodeFragment))
                 it
             else
                 null

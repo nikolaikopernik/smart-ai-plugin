@@ -42,7 +42,7 @@ class ComplexityFix() : LocalQuickFix {
      * This method is called from EDT so cannot block it and need to do the rest in background
      */
     override fun applyFix(project: Project, problemDescriptor: ProblemDescriptor) {
-        val element: PsiElement = problemDescriptor.psiElement
+        val element = problemDescriptor.psiElement.parent
         val aiRequest = RefactorMethodRequest(element.language, element.text)
         // Get the element's position in the editor
         val editor = element.findExistingEditor()!!
@@ -85,7 +85,6 @@ class ComplexityFix() : LocalQuickFix {
                     parent.addBefore(it, element)
                 }
                 element.delete()
-                parent.reformat(false)
                 Statistics.logFixApplied(Inspection.complexity)
             })
         }

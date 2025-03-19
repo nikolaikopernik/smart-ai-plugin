@@ -9,13 +9,13 @@ class JavaCodeProcessor : LanguageSupport {
 
     override fun supportedLanguage(): Language = JavaLanguage.INSTANCE
 
-    override fun findNextNamedIdentifier(element: PsiElement): PsiNamedElement? =
-        element.checkSurroundCode { it.isNamed() }?.parent as PsiNamedElement
+    override fun findNextNamedIdentifier(element: PsiElement): PsiElement? =
+        element.checkSurroundCode { it.isNamed() }
 
     override fun findNextMethod(element: PsiElement): PsiElement? =
         element.checkSurroundCode {
             it.elementType == JavaTokenType.IDENTIFIER && it.parent is PsiMethod
-        }?.parent
+        }
 
     override fun isMethod(element: PsiElement): Boolean = element is PsiMethod
 

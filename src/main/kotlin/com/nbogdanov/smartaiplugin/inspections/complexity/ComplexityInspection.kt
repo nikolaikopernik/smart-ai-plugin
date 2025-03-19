@@ -35,8 +35,10 @@ class ComplexityInspection : LocalInspectionTool() {
         val response = getAIService().ask(FindComplexMethodsRequest(file.language, file))
         if (response == null) {
             return emptyArray()
+            // metrics should be updated inside service
         }
         return response.problems
+            .also { if (it.isEmpty()) Statistics.logNoProblems(complexity) }
             .map { it ->
                 val problematicElement = locateProblem(file, it.problematicCode)
                 return@map if (problematicElement == null) {

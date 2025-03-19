@@ -24,7 +24,7 @@ class DummyNamesFix(val proposedName: String) : LocalQuickFix {
         Statistics.logFixApplied(dummy_names)
         val element: PsiElement = problemDescriptor.psiElement
         RenameProcessor(project,
-            element,
+            element.parent,            // because in problem we highlighted only IDENTIFIER
             proposedName,
             false,
             false).run()

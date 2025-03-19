@@ -17,7 +17,7 @@ interface LanguageSupport {
     /**
      * For locating the dummy named elements we need this method
      */
-    fun findNextNamedIdentifier(element: PsiElement): PsiNamedElement?
+    fun findNextNamedIdentifier(element: PsiElement): PsiElement?
 
     /**
      * We still want to locate code by provided AI code fragment
@@ -65,7 +65,7 @@ fun Language.isSupported() =
  * Seamless using of necessary #LanguageSupport implementation (if loaded)
  * The user don't even need to know about several implementation
  */
-fun PsiElement.findNextNamedIdentifier(): PsiNamedElement? =
+fun PsiElement.findNextNamedIdentifier(): PsiElement? =
     PLUGIN_EP_NAME.findFirstSafe { it.supportedLanguage() == this.language }
         ?.findNextNamedIdentifier(this)
 
