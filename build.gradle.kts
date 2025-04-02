@@ -31,6 +31,7 @@ dependencies {
         testFramework(TestFrameworkType.Bundled)
         testImplementation("org.mockito:mockito-core:5.16.0")
         testImplementation("org.mockito.kotlin:mockito-kotlin:5.1.0") // Kotlin support
+        testImplementation("io.kotest:kotest-assertions-core-jvm:5.9.1")
     }
     implementation("com.openai:openai-java:0.33.0")
 

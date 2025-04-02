@@ -38,5 +38,9 @@
                          implementationClass="com.nbogdanov.smartaiplugin.inspections.complexity.ComplexityInspection"/>
 
         <statistics.counterUsagesCollector implementationClass="com.nbogdanov.smartaiplugin.statistics.Statistics"/>
+
+        <applicationService
+                serviceInterface="com.nbogdanov.smartaiplugin.openai.OpenAIClientService"
+                serviceImplementation="com.nbogdanov.smartaiplugin.openai.OpenAIClientServiceImpl"/>
     </extensions>
 </idea-plugin>

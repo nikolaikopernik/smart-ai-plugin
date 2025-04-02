@@ -1,24 +1,18 @@
 package com.nbogdanov.smartaiplugin
 
-import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
-import com.intellij.openapi.progress.runBlockingCancellable
-import com.nbogdanov.smartaiplugin.openai.OpenAI
+import com.nbogdanov.smartaiplugin.openai.OpenAIService
 import com.nbogdanov.smartaiplugin.openai.model.AIRequest
+import kotlinx.coroutines.runBlocking
 
 /**
  * Light-weighted service not reachable anywhere outside the plugin
  * Here we can plug different LLM providers
  */
 @Service
-class AIService : Disposable {
-    private val openAIClient = OpenAI()
+class AIService {
 
-    fun <T> ask(request: AIRequest<T>): T? = runBlockingCancellable {
-        openAIClient.ask(request)
-    }
-
-    override fun dispose() {
-        openAIClient.close()
+    fun <T> ask(request: AIRequest<T>): T? = runBlocking {
+        OpenAIService.getInstance().ask(request)
     }
 }

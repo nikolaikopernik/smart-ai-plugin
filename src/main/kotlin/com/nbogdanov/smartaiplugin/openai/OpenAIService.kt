@@ -1,13 +1,12 @@
 package com.nbogdanov.smartaiplugin.openai
 
 
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
 import com.nbogdanov.smartaiplugin.openai.model.AIRequest
 import com.nbogdanov.smartaiplugin.openai.model.ContextTooLargeException
 import com.nbogdanov.smartaiplugin.statistics.*
-import com.openai.client.OpenAIClient
-import com.openai.client.okhttp.OpenAIOkHttpClient
-import com.openai.credential.BearerTokenCredential
 import com.openai.errors.*
 import com.openai.models.ChatCompletion
 import com.openai.models.ChatCompletionContentPart
@@ -18,24 +17,17 @@ import java.io.IOException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
-private val log = Logger.getInstance(OpenAI::class.java)
+private val log = Logger.getInstance(OpenAIService::class.java)
 
-private const val CONTEXT_WINDOW_LIMIT = 128000
+const val CONTEXT_WINDOW_LIMIT = 128000
 
 /**
  * Here we apply our OpenAI requests and parse to domain AI responses
  * The main method is suspendable, but it needs to be called from within some coroutine
  */
-class OpenAI {
-    val client: OpenAIClient
+@Service
+class OpenAIService {
 
-    init {
-        val token = System.getenv("OPENAI_API_KEY") ?: System.getProperty("openaiApiToken")
-        log.info { "Initializing OpenAI client with token $token" }
-        client = OpenAIOkHttpClient.builder()
-            .credential(BearerTokenCredential.create(token))
-            .build()
-    }
 
     /**
      * Calling OpenAI to get the results
@@ -43,34 +35,15 @@ class OpenAI {
      * cannot be parsed - then en null response is returned
      */
     suspend fun <T> ask(query: AIRequest<T>): T? {
-        val params = try {
-            ChatCompletionCreateParams.builder()
-                .addSystemMessage(query.systemMessage())
-                .addUserMessage(query.userMessage())
-                .addUserMessageOfArrayOfContentParts(listOf(
-                    ChatCompletionContentPart.ofText(
-                        ChatCompletionContentPartText.builder()
-                            .text(query.trimOpenAiContext())
-                            .build()))
-                )
-                .model(query.modelPreference())
-                .build()
-                .also {
-                    log.debug { "OpenAI request: $it" }
-                }
+        val chatCompletion = try {
+            OpenAIClientService.getInstance().callOpenAI(query.systemMessage(),
+                query.userMessage(),
+                query.trimOpenAiContext(),
+                query.modelPreference())
         } catch (ex: ContextTooLargeException) {
             log.warn { "Context in file ${query.filePath()} is too large for the model. Estimated n of tokens ${query.userMessage().length / 4}" }
             Statistics.logContextTooLarge(query.inspection())
             return null
-        }
-
-        val chatCompletion = try {
-            client.async().chat().completions().create(params)
-                .orTimeout(30, TimeUnit.SECONDS)
-                .await()
-                .also {
-                    log.info { "OpenAI response: $it" }
-                }
         } catch (ex: Exception) {
             log.warn(ex) { "Cannot get response from OpenAI" }
             val issue = when (ex) {
@@ -112,10 +85,6 @@ class OpenAI {
         }
     }
 
-    fun close() {
-        client.close()
-    }
-
     private fun <T> AIRequest<T>.trimOpenAiContext(): String {
         val context = this.fileContent()
         val tokens = context.length / 4
@@ -125,5 +94,9 @@ class OpenAI {
         } else {
             return context
         }
+    }
+
+    companion object {
+        fun getInstance(): OpenAIService = ApplicationManager.getApplication().getService(OpenAIService::class.java)
     }
 }
