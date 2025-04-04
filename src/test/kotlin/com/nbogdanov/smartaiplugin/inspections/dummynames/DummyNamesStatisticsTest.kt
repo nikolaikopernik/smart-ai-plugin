@@ -1,21 +1,15 @@
 package com.nbogdanov.smartaiplugin.inspections.dummynames
 
-import com.intellij.codeInspection.InspectionManager
-import com.intellij.codeInspection.LocalQuickFix
-import com.intellij.codeInspection.ProblemDescriptor
-import com.intellij.codeInspection.ProblemHighlightType
-import com.intellij.lang.java.JavaLanguage
+import com.intellij.codeInsight.intention.IntentionAction
+import com.intellij.codeInspection.ex.QuickFixWrapper
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.extensions.ExtensionPointName
-import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
-import com.intellij.testFramework.ExtensionTestUtil
-import com.intellij.testFramework.LightPlatformTestCase
+import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import com.intellij.testFramework.registerServiceInstance
-import com.nbogdanov.smartaiplugin.*
-import com.nbogdanov.smartaiplugin.language.LanguageSupport
+import com.nbogdanov.smartaiplugin.FakeOpenAIClientService
+import com.nbogdanov.smartaiplugin.buildSimpleWithBody
+import com.nbogdanov.smartaiplugin.openai.CONTEXT_WINDOW_LIMIT
 import com.nbogdanov.smartaiplugin.openai.OpenAIClientService
+import com.nbogdanov.smartaiplugin.shouldHaveOnlyCounters
 import com.nbogdanov.smartaiplugin.statistics.LocalStatistics
 import com.openai.core.http.Headers
 import com.openai.errors.InternalServerException
@@ -23,56 +17,27 @@ import com.openai.errors.OpenAIError
 import com.openai.errors.OpenAIIoException
 import com.openai.models.ChatCompletion
 import io.kotest.matchers.collections.shouldHaveSize
-import org.mockito.ArgumentMatchers.anyBoolean
-import org.mockito.Mockito.mock
-import org.mockito.kotlin.any
-import org.mockito.kotlin.whenever
 
 /**
  * Set of tests to check if we covered all the cases with Metrics/Statistics
+ * We test on a single file Test.java as the content is not that important
  */
-class DummyNamesStatisticsTest : LightPlatformTestCase() {
-    val vrFileForAnalysis = mock<VirtualFile>()
-    val psiFile = mock<PsiFile>()
-    val psiElement = mock<PsiElement>()
-    val inspectionManager = mock<InspectionManager>()
+class DummyNamesStatisticsTest : BasePlatformTestCase() {
     val openAI = FakeOpenAIClientService()
-    val shownLocalFixes = mutableListOf<LocalQuickFix>()
 
     override fun setUp() {
         super.setUp()
 
-        // mocking the psi stuff
-        whenever(vrFileForAnalysis.getPath()).thenReturn("/test/path/file.java")
-        whenever(psiFile.getVirtualFile()).thenReturn(vrFileForAnalysis)
-        whenever(psiFile.text).thenReturn(SIMPLE_CLASS)
-        whenever(psiFile.findElementAt(any())).thenReturn(psiElement)
-        whenever(psiElement.language).thenReturn(JavaLanguage.INSTANCE)
-        whenever(psiElement.parent).thenReturn(psiElement)
-        whenever(psiFile.language).thenReturn(JavaLanguage.INSTANCE)
-        whenever(inspectionManager.createProblemDescriptor(any<PsiElement>(),
-            any<String>(),
-            anyBoolean(),
-            any(),
-            any<ProblemHighlightType>()))
-            .thenAnswer { it ->
-                shownLocalFixes.add((it.arguments[3] as Array<LocalQuickFix>).first())
-                mock<ProblemDescriptor>()
-            }
+        myFixture.enableInspections(DummyNamesInspection::class.java)
+        myFixture.addFileToProject("String.java", "package java.lang; public final class String {}")
+        myFixture.configureByFile("Test.java")
 
         // mocking services and extension point
         ApplicationManager.getApplication().registerServiceInstance(
             OpenAIClientService::class.java,
             openAI)
-        val extensionPointName: ExtensionPointName<LanguageSupport> =
-            ExtensionPointName("com.nbogdanov.smartaiplugin.languageSupport")
-
-        // Register a mock implementation for the test
-        ExtensionTestUtil.maskExtensions(extensionPointName, listOf(FakeLanguageSupport()),
-            testRootDisposable)
 
         //clear the statistics
-        shownLocalFixes.clear()
         LocalStatistics.getInstance().loadState(LocalStatistics.State())
     }
 
@@ -81,11 +46,13 @@ class DummyNamesStatisticsTest : LightPlatformTestCase() {
      * triggered/measured
      */
     fun testNotRecordTooLongContext() {
-        whenever(psiFile.text).thenReturn(psiFile.tooLongContent());
+        myFixture.addFileToProject("TestLong.java", SIMPLE_CLASS.generateLongClass())
+        myFixture.configureByFile("TestLong.java")
 
-        DummyNamesInspection().checkFile(psiFile, inspectionManager, false)
+        myFixture.doHighlighting()
 
-        shownLocalFixes shouldHaveSize 1
+        //somehow all the inspections are enabled again
+        myFixture.getAllQuickFixes().filterDummyFixes() shouldHaveSize 1
         LocalStatistics.getInstance().shouldHaveOnlyCounters(
             "triggered.dummy_names" to 1,
             "fix-shown.dummy_names" to 1)
@@ -94,9 +61,9 @@ class DummyNamesStatisticsTest : LightPlatformTestCase() {
     fun testNetworkIoIssueHappens() {
         openAI.respondWith { throw OpenAIIoException("Network issue") }
 
-        DummyNamesInspection().checkFile(psiFile, inspectionManager, false)
+        myFixture.doHighlighting()
 
-        shownLocalFixes shouldHaveSize 0
+        myFixture.getAllQuickFixes() shouldHaveSize 0
         LocalStatistics.getInstance().shouldHaveOnlyCounters(
             "triggered.dummy_names" to 1,
             "network-issue.dummy_names.io_exception" to 1)
@@ -110,9 +77,9 @@ class DummyNamesStatisticsTest : LightPlatformTestCase() {
                 OpenAIError.builder().build())
         }
 
-        DummyNamesInspection().checkFile(psiFile, inspectionManager, false)
+        myFixture.doHighlighting()
 
-        shownLocalFixes shouldHaveSize 0
+        myFixture.getAllQuickFixes() shouldHaveSize 0
         LocalStatistics.getInstance().shouldHaveOnlyCounters(
             "triggered.dummy_names" to 1,
             "network-issue.dummy_names.http_5xx" to 1)
@@ -125,9 +92,9 @@ class DummyNamesStatisticsTest : LightPlatformTestCase() {
             )
         }
 
-        DummyNamesInspection().checkFile(psiFile, inspectionManager, false)
+        myFixture.doHighlighting()
 
-        shownLocalFixes shouldHaveSize 0
+        myFixture.getAllQuickFixes() shouldHaveSize 0
         LocalStatistics.getInstance().shouldHaveOnlyCounters(
             "triggered.dummy_names" to 1,
             "model-not-finished.dummy_names" to 1)
@@ -136,9 +103,9 @@ class DummyNamesStatisticsTest : LightPlatformTestCase() {
     fun testCannotParseModelResponse() {
         openAI.respondWith { ChatCompletion.builder().buildSimpleWithBody(body = "SOME WEIRD RESPONSE") }
 
-        DummyNamesInspection().checkFile(psiFile, inspectionManager, false)
+        myFixture.doHighlighting()
 
-        shownLocalFixes shouldHaveSize 0
+        myFixture.getAllQuickFixes() shouldHaveSize 0
         LocalStatistics.getInstance().shouldHaveOnlyCounters(
             "triggered.dummy_names" to 1,
             "model-incorrect-json.dummy_names" to 1)
@@ -154,9 +121,9 @@ class DummyNamesStatisticsTest : LightPlatformTestCase() {
         """.trimIndent())
         }
 
-        DummyNamesInspection().checkFile(psiFile, inspectionManager, false)
+        myFixture.doHighlighting()
 
-        shownLocalFixes shouldHaveSize 0
+        myFixture.getAllQuickFixes() shouldHaveSize 0
         LocalStatistics.getInstance().shouldHaveOnlyCounters(
             "triggered.dummy_names" to 1,
             "no-problems-to-show.dummy_names" to 1)
@@ -177,9 +144,9 @@ class DummyNamesStatisticsTest : LightPlatformTestCase() {
         """.trimIndent())
         }
 
-        DummyNamesInspection().checkFile(psiFile, inspectionManager, false)
+        myFixture.doHighlighting()
 
-        shownLocalFixes shouldHaveSize 0
+        myFixture.getAllQuickFixes() shouldHaveSize 0
         LocalStatistics.getInstance().shouldHaveOnlyCounters(
             "triggered.dummy_names" to 1,
             "cannot-locate-code.dummy_names.java" to 1)
@@ -191,49 +158,63 @@ class DummyNamesStatisticsTest : LightPlatformTestCase() {
             ```json
                 [
                     {
-                        "problematicCode": "fun a(path: String):String {",
-                        "explanation": "The functions 'a' is not descriptive of its purpose or the data it holds.",
-                        "proposedName": "element"
+                        "problematicCode": "var k = get1(1);",
+                        "explanation": "Some explanation",
+                        "proposedName": "counter"
                     },
                     {
-                        "problematicCode": "fun a(path: String):String {",
+                        "problematicCode": "public static final java.lang.String a = \"abc\"",
                         "explanation": "The functions 'a' is not descriptive of its purpose or the data it holds.",
-                        "proposedName": "element"
+                        "proposedName": "OPERATION_ID"
                     }
                 ]
             ```
         """.trimIndent())
         }
 
-        DummyNamesInspection().checkFile(psiFile, inspectionManager, false)
+        myFixture.doHighlighting()
 
-        shownLocalFixes shouldHaveSize 2
+        myFixture.getAllQuickFixes() shouldHaveSize 2
         LocalStatistics.getInstance().shouldHaveOnlyCounters(
             "triggered.dummy_names" to 1,
             "fix-shown.dummy_names" to 2)
     }
 
     fun testFixIsApplied() {
-        DummyNamesInspection().checkFile(psiFile, inspectionManager, false)
+        // execute
+        myFixture.doHighlighting()
 
-        shownLocalFixes shouldHaveSize 1
+        myFixture.getAllQuickFixes() shouldHaveSize 1
+        myFixture.getAllQuickFixes().first().invoke(myFixture.project, myFixture.editor, myFixture.file)
 
-        val problem = mock<ProblemDescriptor>()
-        whenever(problem.psiElement).thenReturn(psiElement)
-
-
-        shownLocalFixes.first().applyFix(project, problem)
         LocalStatistics.getInstance().shouldHaveOnlyCounters(
             "triggered.dummy_names" to 1,
             "fix-shown.dummy_names" to 1,
             "fix-applied.dummy_names" to 1)
     }
+
+    override fun getTestDataPath(): String? {
+        return "src/test/testData/java/"
+    }
 }
 
 val SIMPLE_CLASS = """
-    class SimpleClass{
-      fun a(path: String):String {
-        return path.substring(1)
-      }
+    public class Test {
+    public static final java.lang.String a = "abc";
+
+    private int get1(int i) {
+        return 1;
     }
+
+    public java.lang.String calculate() {
+        var k = get1(1);
+        return "Sdf" + a;
+    }
+}
 """.trimIndent()
+
+fun String.generateLongClass() = this.replace("abc",
+    String((0..CONTEXT_WINDOW_LIMIT * 4).map { 1.toByte() }.toByteArray()))
+
+fun List<IntentionAction>.filterDummyFixes(): List<IntentionAction> =
+    this.filter { it is DummyNamesFix || (QuickFixWrapper.unwrap(it) is DummyNamesFix ) }

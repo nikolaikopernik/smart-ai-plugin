@@ -47,9 +47,9 @@ val AI_DUMMY_NAMES_SIMPLE = """
                         ```json
                         [
                             {
-                                "problematicCode": "fun a(path: String):String {",
-                                "explanation": "The functions 'a' is not descriptive of its purpose or the data it holds.",
-                                "proposedName": "element"
+                                "problematicCode": "var k = get1(1);",
+                                "explanation": "Some explanation",
+                                "proposedName": "counter"
                             }
                         ]
                         ```
