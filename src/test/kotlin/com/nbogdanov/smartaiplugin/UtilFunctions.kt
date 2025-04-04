@@ -1,7 +1,6 @@
 package com.nbogdanov.smartaiplugin
 
 import com.intellij.psi.PsiFile
-import com.nbogdanov.smartaiplugin.inspections.dummynames.SIMPLE_CLASS
 import com.nbogdanov.smartaiplugin.openai.CONTEXT_WINDOW_LIMIT
 import com.nbogdanov.smartaiplugin.statistics.LocalStatistics
 import io.kotest.assertions.withClue
@@ -22,3 +21,23 @@ fun LocalStatistics.shouldHaveOnlyCounters(vararg counters: Pair<String, Int>) {
         }
     }
 }
+
+
+val SIMPLE_CLASS = """
+    public class Test {
+    public static final java.lang.String a = "abc";
+
+    private int get1(int i) {
+        var str = "REPLACE";
+        return 1;
+    }
+
+    public java.lang.String calculate() {
+        var k = get1(1);
+        return "Sdf" + a;
+    }
+}
+""".trimIndent()
+
+fun String.generateLongClass() = this.replace("REPLACE",
+    (0..CONTEXT_WINDOW_LIMIT * 4).joinToString { "1" })

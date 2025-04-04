@@ -54,3 +54,15 @@ val AI_DUMMY_NAMES_SIMPLE = """
                         ]
                         ```
                     """.trimIndent()
+
+val AI_COMPLEXITY_SIMPLE = """
+                        ```json
+                        [
+                            {
+                                "problematicCode": "private int get1(int i)",
+                                "explanation": "Method is too complex",
+                                "score": "high"
+                            }
+                        ]
+                        ```
+                    """.trimIndent()

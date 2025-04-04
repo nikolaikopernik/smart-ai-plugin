@@ -61,16 +61,27 @@ class ComplexityFix() : LocalQuickFix {
                 }
 
                 // Update UI on EDT
-                ApplicationManager.getApplication().invokeLater(Runnable {
-                    ComplexityRefactorConfirmationComponent(
-                        code = response,
-                        project = project,
-                        language = element.containingFile.language,
-                        relativePoint = relativePoint,
-                        apply = { applyRefactoring(element, project, response) },
-                        cancel = { Statistics.logFixShownRefactorCancelled() }
-                    ).showConfirmation()
-                })
+                if (!ApplicationManager.getApplication().isHeadlessEnvironment) {
+                    ApplicationManager.getApplication().invokeLater(Runnable {
+                        ComplexityRefactorConfirmationComponent(
+                            code = response,
+                            project = project,
+                            language = element.containingFile.language,
+                            relativePoint = relativePoint,
+                            apply = { applyRefactoring(element, project, response) },
+                            cancel = { Statistics.logFixShownRefactorCancelled() }
+                        ).showConfirmation()
+                    })
+                } else {
+                    // this is a workaround to test apply/cancel functionality bypassing UI
+                    if (response == "cancel") {
+                        Statistics.logFixShownRefactorCancelled()
+                    } else {
+                        WriteCommandAction.runWriteCommandAction(project) {
+                            applyRefactoring(element, project, response)
+                        }
+                    }
+                }
             }
         }.queue()
     }
@@ -85,13 +96,13 @@ class ComplexityFix() : LocalQuickFix {
             log.warn { "Cannot interpret the suggestion from AI. Aborting refactoring." }
             Statistics.logFixShownRefactorFailed()
         } else {
-            WriteCommandAction.runWriteCommandAction(project, Runnable {
+            WriteCommandAction.runWriteCommandAction(project) {
                 methods.forEach {
                     parent.addBefore(it, element)
                 }
                 element.delete()
                 Statistics.logFixApplied(Inspection.complexity)
-            })
+            }
         }
     }
 }

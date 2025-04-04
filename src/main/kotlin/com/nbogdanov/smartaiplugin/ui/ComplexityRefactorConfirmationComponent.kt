@@ -65,6 +65,7 @@ class ComplexityRefactorConfirmationComponent(val code: String,
         this.popup = JBPopupFactory.getInstance()
             .createComponentPopupBuilder(this, null)
             .setCancelOnClickOutside(true)
+            .setCancelCallback { cancel(); true }
             .setResizable(true)
             .createPopup();
         this.popup!!.show(relativePoint)
