@@ -27,7 +27,7 @@ class DummyNamesRequest(val lang: Language, val file: PsiFile) : AIRequest<AIDum
 
     override fun filePath() = file.virtualFile.path
 
-    override fun fileContent() = String(file.virtualFile.contentsToByteArray())
+    override fun fileContent() = file.text
 
     override fun inspection() = Inspection.dummy_names
 

@@ -70,6 +70,10 @@ class DummyNamesInspection : LocalInspectionTool() {
 
     private fun locateProblem(file: PsiFile, problemCodeFragment: String): PsiElement? {
         val offset = file.text.indexOf(problemCodeFragment)
+        if (offset < 0) {
+            log.warn { "Cannot locate problem code in file ${file.virtualFile.path}: $problemCodeFragment" }
+            return null
+        }
         val element = file.findElementAt(offset)
         if (element == null) {
             log.warn { "Cannot locate problem code in file ${file.virtualFile.path}: $problemCodeFragment" }

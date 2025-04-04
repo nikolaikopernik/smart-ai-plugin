@@ -1,4 +1,4 @@
-package com.nbogdanov.smartaiplugin.inspections.dummynames
+package com.nbogdanov.smartaiplugin
 
 import com.intellij.lang.Language
 import com.intellij.lang.java.JavaLanguage
