@@ -34,6 +34,7 @@ dependencies {
         testImplementation("io.kotest:kotest-assertions-core-jvm:5.9.1")
     }
     implementation("com.openai:openai-java:0.33.0")
+    implementation("com.github.ben-manes.caffeine:caffeine:3.2.0")
 
     testRuntimeOnly("junit:junit:4.13.2")
     testImplementation("org.opentest4j:opentest4j:1.3.0")

@@ -1,6 +1,8 @@
 package com.nbogdanov.smartaiplugin
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
+import com.nbogdanov.smartaiplugin.misc.AICommunicationCache
 import com.nbogdanov.smartaiplugin.openai.OpenAIService
 import com.nbogdanov.smartaiplugin.openai.model.AIRequest
 import kotlinx.coroutines.runBlocking
@@ -11,8 +13,16 @@ import kotlinx.coroutines.runBlocking
  */
 @Service
 class AIService {
+    private val cache = AICommunicationCache()
 
     fun <T> ask(request: AIRequest<T>): T? = runBlocking {
-        OpenAIService.getInstance().ask(request)
+        cache.getOrCall(request) {
+            OpenAIService.getInstance().ask(request)
+        }
+    }
+
+
+    companion object {
+        fun getInstance(): AIService = ApplicationManager.getApplication().getService(AIService::class.java)
     }
 }
