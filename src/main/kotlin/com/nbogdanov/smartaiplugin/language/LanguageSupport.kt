@@ -3,7 +3,6 @@ package com.nbogdanov.smartaiplugin.language
 import com.intellij.lang.Language
 import com.intellij.openapi.extensions.ExtensionPointName
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiNamedElement
 
 /**
  * In order to optionally support several languages we need to have several implementation and
