@@ -41,7 +41,7 @@ class DummyNamesInspection : LocalInspectionTool() {
         return response.problems
             .also { if (it.isEmpty()) Statistics.logNoProblems(dummy_names) }
             .map { it ->
-                val problematicElement = locateProblem(file, it.problematicCode)
+                val problematicElement = locateProblem(file, it.problematicCode, it.problematicName)
                 return@map if (problematicElement == null) {
                     // If we didn't locate the problem based on AI response?
                     // let's not bother the user and ignore it, but need to record this case
@@ -68,7 +68,7 @@ class DummyNamesInspection : LocalInspectionTool() {
         return file.language.isSupported()
     }
 
-    private fun locateProblem(file: PsiFile, problemCodeFragment: String): PsiElement? {
+    private fun locateProblem(file: PsiFile, problemCodeFragment: String, problemName: String): PsiElement? {
         val offset = file.text.indexOf(problemCodeFragment)
         if (offset < 0) {
             log.warn { "Cannot locate problem code in file ${file.virtualFile.path}: $problemCodeFragment" }
@@ -79,7 +79,7 @@ class DummyNamesInspection : LocalInspectionTool() {
             log.warn { "Cannot locate problem code in file ${file.virtualFile.path}: $problemCodeFragment" }
             return null
         }
-        return element.findNextNamedIdentifier()?.let { it ->
+        return element.findNextNamedIdentifier(problemName)?.let { it ->
             // final check
             // if AI returned name only - let's double-check we found the correct element
             if (problemCodeFragment.indexOf(" ") > 0 || it.text.equals(problemCodeFragment))

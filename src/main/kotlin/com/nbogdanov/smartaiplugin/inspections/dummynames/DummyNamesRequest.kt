@@ -19,9 +19,9 @@ class DummyNamesRequest(val lang: Language, val file: PsiFile) : AIRequest<AIDum
         """
             Analyze the provided code in ${lang.id} and spot all the dummy names in variables fields and methods. 
             For every problematic name, include the whole line of code with that name. For explanation use max 2 sentences. 
-            And solutionCode should contain the new name only.
+            And proposedName should contain the new name only.
             For every spotted problem, use the following format:
-              [{"problematicCode": ..., "explanation": ..., "proposedName": ...},{...}]
+              [{"problematicCode": ..., "problematicName": ..., "explanation": ..., "proposedName": ...},{...}]
             Do not add any other text apart of this json.
         """.intern()
 

@@ -1,5 +1,5 @@
-public class Test {
-    public static final java.lang.String a = "abc";
+class Test {
+    private static final java.lang.String a = "abc";
 
     private int getCounter(int i) {
         return 1;

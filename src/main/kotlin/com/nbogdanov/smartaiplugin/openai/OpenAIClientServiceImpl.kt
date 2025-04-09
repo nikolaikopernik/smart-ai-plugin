@@ -2,8 +2,8 @@ package com.nbogdanov.smartaiplugin.openai
 
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.diagnostic.Logger
-import com.nbogdanov.smartaiplugin.statistics.debug
 import com.nbogdanov.smartaiplugin.statistics.info
+import com.nbogdanov.smartaiplugin.statistics.warn
 import com.openai.client.OpenAIClient
 import com.openai.client.okhttp.OpenAIOkHttpClient
 import com.openai.credential.BearerTokenCredential
@@ -41,14 +41,14 @@ class OpenAIClientServiceImpl : OpenAIClientService, Disposable {
             .model(model)
             .build()
             .also {
-                log.debug { "OpenAI request: $it" }
+                log.warn { "OpenAI request: --" }
             }
 
         return client.async().chat().completions().create(params)
             .orTimeout(30, TimeUnit.SECONDS)
             .await()
             .also {
-                log.info { "OpenAI response: $it" }
+                log.warn { "OpenAI response: $it" }
             }
     }
 

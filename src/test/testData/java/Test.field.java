@@ -1,5 +1,5 @@
-public class Test {
-    public static final java.lang.String OPERATION_ID = "abc";
+class Test {
+    private static final java.lang.String OPERATION_ID = "abc";
 
     private int get1(int i) {
         return 1;

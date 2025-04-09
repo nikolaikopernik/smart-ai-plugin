@@ -1,5 +1,5 @@
-public class Test {
-    public static final java.lang.String a = "abc";
+class Test {
+    private static final java.lang.String a = "abc";
 
     private int get1(int increment) {
         return 1;

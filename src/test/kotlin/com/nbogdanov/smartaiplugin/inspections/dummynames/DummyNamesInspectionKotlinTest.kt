@@ -23,6 +23,7 @@ class DummyNamesInspectionKotlinTest : BasePlatformTestCase() {
 
     fun testFixDummyMethodName() {
         doTest(givenProblem = AIProblem("private fun get1(i: Int): Int {",
+            "get1",
             "Some explanation",
             "getCounter"),
             expectedFile = "Test.method.kt")
@@ -30,6 +31,7 @@ class DummyNamesInspectionKotlinTest : BasePlatformTestCase() {
 
     fun testFixDummyVariable() {
         doTest(givenProblem = AIProblem("var k = get1(1)",
+            "k",
             "Some explanation",
             "incrementValue"),
             expectedFile = "Test.variable.kt")
@@ -37,6 +39,7 @@ class DummyNamesInspectionKotlinTest : BasePlatformTestCase() {
 
     fun testFixDummyField() {
         doTest(givenProblem = AIProblem("private val a = \"abc\"",
+            "a",
             "Some explanation",
             "CONSTANT"),
             expectedFile = "Test.field.kt")
@@ -44,6 +47,7 @@ class DummyNamesInspectionKotlinTest : BasePlatformTestCase() {
 
     fun testFixDummyParameter() {
         doTest(givenProblem = AIProblem("i: Int",
+            "i",
             "Some explanation",
             "idIncremental"),
             expectedFile = "Test.parameter.kt")
@@ -51,6 +55,7 @@ class DummyNamesInspectionKotlinTest : BasePlatformTestCase() {
 
     fun testCannotFixIfOnlySimpleNameProvided() {
         doTest(givenProblem = AIProblem("i",
+            "i",
             "Some explanation",
             "increment"),
             expectedFile = "Test.kt")

@@ -11,11 +11,11 @@ class JavaCodeProcessor : LanguageSupport {
 
     override fun supportedLanguage(): Language = JavaLanguage.INSTANCE
 
-    override fun findNextNamedIdentifier(element: PsiElement): PsiElement? {
+    override fun findNextNamedIdentifier(element: PsiElement, name: String): PsiElement? {
         var found: PsiElement? = null
         element.parent.parent.accept(object : JavaRecursiveElementVisitor() {
             override fun visitIdentifier(identifier: PsiIdentifier) {
-                if (found == null) found = identifier
+                if (identifier.text == name) found = identifier
             }
         })
         return found

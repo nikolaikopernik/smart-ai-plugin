@@ -21,6 +21,7 @@ class DummyNamesInspectionJavaTest : BasePlatformTestCase() {
 
     fun testFixDummyMethodName() {
         doTest(givenProblem = AIProblem("private int get1(int i) {",
+            "get1",
             "Some explanation",
             "getCounter"),
             expectedFile = "Test.method.java")
@@ -28,13 +29,15 @@ class DummyNamesInspectionJavaTest : BasePlatformTestCase() {
 
     fun testFixDummyVariable() {
         doTest(givenProblem = AIProblem("var k = get1(1);",
+            "k",
             "Some explanation",
             "counter"),
             expectedFile = "Test.variable.java")
     }
 
     fun testFixDummyField() {
-        doTest(givenProblem = AIProblem("public static final java.lang.String a = \"abc\";",
+        doTest(givenProblem = AIProblem("private static final java.lang.String a = \"abc\";",
+            "a",
             "Some explanation",
             "OPERATION_ID"),
             expectedFile = "Test.field.java")
@@ -42,6 +45,7 @@ class DummyNamesInspectionJavaTest : BasePlatformTestCase() {
 
     fun testFixDummyParameter() {
         doTest(givenProblem = AIProblem("int i",
+            "i",
             "Some explanation",
             "increment"),
             expectedFile = "Test.parameter.java")
@@ -49,6 +53,7 @@ class DummyNamesInspectionJavaTest : BasePlatformTestCase() {
 
     fun testCannotFixIfOnlySimpleNameProvided() {
         doTest(givenProblem = AIProblem("i",
+            "i",
             "Some explanation",
             "increment"),
             expectedFile = "Test.java")
